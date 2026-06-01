@@ -1,0 +1,324 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(22, 28, 35, 0.64), rgba(22, 28, 35, 0.72)),
+    repeating-linear-gradient(45deg, #8a6a43 0 18px, #705132 18px 36px);
+}
+
+.gameInfo {
+  margin-bottom: 24px;
+  padding: 18px 32px;
+  text-align: center;
+  background: rgba(253, 250, 241, 0.96);
+  border: 1px solid rgba(66, 41, 24, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+}
+
+.gameInfo h1 {
+  margin: 0 0 12px;
+  color: #251b14;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.status {
+  display: inline-block;
+  min-width: 220px;
+  margin-bottom: 14px;
+  padding: 8px 14px;
+  color: #302419;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: #efe4cf;
+  border: 1px solid rgba(73, 50, 29, 0.18);
+  border-radius: 6px;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.resetButton,
+.undoButton,
+.callButton {
+  min-width: 112px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.resetButton {
+  background: #247a5a;
+}
+
+.undoButton {
+  background: #9a5b20;
+}
+
+.callButton {
+  background: #3e6f6b;
+}
+
+.resetButton:hover,
+.undoButton:hover:not(:disabled),
+.callButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+.undoButton:disabled {
+  color: #715f50;
+  background: #d8c8b4;
+  cursor: not-allowed;
+}
+
+.boardWrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: min(640px, calc(100vw - 48px));
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #2b1d13;
+  border: 10px solid #332217;
+  border-radius: 8px;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.34);
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 0;
+  cursor: pointer;
+}
+
+.square:focus-visible {
+  z-index: 1;
+  outline: 3px solid #f7d26b;
+  outline-offset: -3px;
+}
+
+.lightSquare {
+  background: #e9d6b8;
+}
+
+.darkSquare {
+  background: #9b714c;
+}
+
+.selectedSquare::after,
+.legalSquare::after,
+.captureSquare::after {
+  position: absolute;
+  inset: 8px;
+  content: '';
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.selectedSquare::after {
+  border: 4px solid #f5d45c;
+}
+
+.legalSquare::after {
+  background: rgba(36, 122, 90, 0.28);
+}
+
+.captureSquare::after {
+  background: rgba(175, 44, 44, 0.32);
+  border: 3px solid rgba(175, 44, 44, 0.72);
+}
+
+.calledSquare::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border: 4px solid #f1c40f;
+  background: rgba(241, 196, 15, 0.15);
+  pointer-events: none;
+}
+
+.piece {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70%;
+  aspect-ratio: 1;
+  color: #fff;
+  border-radius: 50%;
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.18), 0 8px 14px rgba(0, 0, 0, 0.28);
+}
+
+.pieceRole {
+  font-size: clamp(0.62rem, 2.2vw, 1rem);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.red {
+  background: #b73b33;
+  border: 3px solid #f1b2a3;
+}
+
+.blue {
+  background: #1d5f90;
+  border: 3px solid #9bc7e7;
+}
+
+.moveHistory {
+  width: min(320px, calc(100vw - 48px));
+  max-height: 640px;
+  overflow-y: auto;
+  padding: 16px;
+  color: #261b13;
+  background: rgba(253, 250, 241, 0.96);
+  border: 1px solid rgba(66, 41, 24, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+}
+
+.moveHistoryCollapsed {
+  max-height: none;
+  overflow: visible;
+}
+
+.moveHistoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(66, 41, 24, 0.18);
+}
+
+.moveHistoryCollapsed .moveHistoryHeader {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.moveHistory h3 {
+  margin: 0;
+  color: #251b14;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.moveCount {
+  display: block;
+  margin-top: 3px;
+  color: #705132;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.historyToggleButton {
+  flex: 0 0 auto;
+  min-width: 68px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 800;
+  background: #3e6f6b;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.historyToggleButton:hover {
+  background: #315d59;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.historyToggleButton:focus-visible {
+  outline: 3px solid #f7d26b;
+  outline-offset: 2px;
+}
+
+.moveList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.moveItem {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  background: #f1e6d4;
+  border-radius: 6px;
+}
+
+.moveNumber {
+  color: #705132;
+  font-weight: 800;
+}
+
+.moveSan {
+  color: #251b14;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .container {
+    justify-content: flex-start;
+    padding: 16px;
+  }
+
+  .gameInfo {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .gameInfo h1 {
+    font-size: 1.55rem;
+  }
+
+  .status {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .buttonGroup {
+    flex-wrap: wrap;
+  }
+
+  .board {
+    width: min(100%, calc(100vw - 32px));
+    border-width: 6px;
+  }
+}

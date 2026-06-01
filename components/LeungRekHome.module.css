@@ -1,0 +1,275 @@
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  min-height: 100vh;
+  gap: 24px;
+  padding: 32px;
+  color: #251b14;
+  background:
+    linear-gradient(rgba(22, 28, 35, 0.58), rgba(22, 28, 35, 0.7)),
+    repeating-linear-gradient(45deg, #8a6a43 0 18px, #705132 18px 36px);
+}
+
+.playPanel,
+.accountPanel {
+  background: rgba(253, 250, 241, 0.96);
+  border: 1px solid rgba(66, 41, 24, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+}
+
+.playPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  padding: 36px;
+}
+
+.brandBlock {
+  max-width: 760px;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  color: #247a5a;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.brandBlock h1 {
+  margin: 0;
+  color: #251b14;
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  line-height: 0.95;
+}
+
+.summary {
+  max-width: 560px;
+  margin: 14px 0 0;
+  color: #5e4937;
+  font-size: 1.08rem;
+  line-height: 1.5;
+}
+
+.modeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.modeCard {
+  min-height: 148px;
+  padding: 18px;
+  text-align: left;
+  background: #f1e6d4;
+  border: 1px solid rgba(66, 41, 24, 0.16);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.modeCard:hover,
+.modeCard:focus-visible {
+  border-color: rgba(36, 122, 90, 0.68);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.16);
+  outline: 0;
+}
+
+.modeTitle {
+  display: block;
+  color: #251b14;
+  font-size: 1.18rem;
+  font-weight: 900;
+}
+
+.modeText {
+  display: block;
+  margin-top: 8px;
+  color: #6a5541;
+  font-size: 0.96rem;
+  line-height: 1.35;
+}
+
+.roomJoin {
+  padding: 18px;
+  background: #efe4cf;
+  border: 1px solid rgba(66, 41, 24, 0.16);
+  border-radius: 8px;
+}
+
+.roomJoin label,
+.authForm label {
+  display: grid;
+  gap: 7px;
+  color: #4d3828;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.joinControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.joinControls input,
+.authForm input {
+  min-width: 0;
+  padding: 11px 12px;
+  color: #251b14;
+  font: inherit;
+  background: #fffaf0;
+  border: 1px solid rgba(66, 41, 24, 0.22);
+  border-radius: 6px;
+}
+
+.joinControls button,
+.authForm > button,
+.secondaryButton {
+  padding: 11px 14px;
+  color: #fff;
+  font-weight: 900;
+  background: #247a5a;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.joinControls button:disabled,
+.authForm > button:disabled,
+.secondaryButton:disabled {
+  color: #715f50;
+  background: #d8c8b4;
+  cursor: not-allowed;
+}
+
+.accountPanel {
+  align-self: stretch;
+  padding: 22px;
+}
+
+.accountHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.accountHeader h2 {
+  margin: 0;
+  color: #251b14;
+  font-size: 1.25rem;
+}
+
+.accountHeader span {
+  padding: 5px 8px;
+  color: #247a5a;
+  font-size: 0.78rem;
+  font-weight: 900;
+  background: #dcebdd;
+  border-radius: 6px;
+}
+
+.authForm,
+.profileCard {
+  display: grid;
+  gap: 14px;
+}
+
+.authTabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.authTabs button {
+  padding: 9px 10px;
+  color: #705132;
+  font-weight: 900;
+  background: #efe4cf;
+  border: 1px solid rgba(66, 41, 24, 0.14);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.authTabs .activeTab {
+  color: #fff;
+  background: #705132;
+}
+
+.profileCard {
+  padding: 16px;
+  background: #f1e6d4;
+  border-radius: 8px;
+}
+
+.profileName {
+  margin: 0;
+  color: #251b14;
+  font-size: 1.28rem;
+  font-weight: 900;
+}
+
+.profileEmail {
+  margin: 3px 0 0;
+  color: #705132;
+  font-size: 0.9rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.statsGrid span {
+  padding: 12px;
+  color: #5e4937;
+  background: #fffaf0;
+  border-radius: 6px;
+}
+
+.statsGrid strong {
+  display: block;
+  color: #251b14;
+  font-size: 1.5rem;
+}
+
+.secondaryButton {
+  background: #9a5b20;
+}
+
+.authMessage {
+  margin: 16px 0 0;
+  padding: 12px;
+  color: #79411d;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.35;
+  background: #f7e5c7;
+  border-radius: 6px;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .playPanel,
+  .accountPanel {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 620px) {
+  .modeGrid,
+  .joinControls {
+    grid-template-columns: 1fr;
+  }
+}
