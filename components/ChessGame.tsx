@@ -1,11 +1,26 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './ChessGame.module.css';
 import { GameState, MoveHistoryItem, Player, RekBoard } from '@/types/chess';
+import { createClient } from '@/util/supabase/client';
 
 const BOARD_SIZE = 8;
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+type GameRoom = {
+  room_code: string;
+  board_state: RekBoard;
+  turn: Player;
+  status: 'waiting' | 'in_progress' | 'finished';
+  player_red: string | null;
+  player_blue: string | null;
+  player_id_red: string | null;
+  player_id_blue: string | null;
+  called_square: Square | null;
+  move_history: MoveHistoryItem[];
+  winner: Player | null;
+};
 
 type Square = {
   row: number;
@@ -251,6 +266,14 @@ function canCallSquare(board: RekBoard, square: Square, callingPlayer: Player): 
   );
 }
 
+function serializeBoard(board: RekBoard): RekBoard {
+  return board;
+}
+
+function deserializeBoard(board: unknown): RekBoard {
+  return board as RekBoard;
+}
+
 export default function ChessGame({
   isOnline = false,
   roomCode = null,
@@ -267,10 +290,68 @@ export default function ChessGame({
   const [showMoveHistory, setShowMoveHistory] = useState(true);
   const [calledSquare, setCalledSquare] = useState<Square | null>(null);
   const [callTimer, setCallTimer] = useState<number | null>(null);
+  const [playerColor, setPlayerColor] = useState<Player | null>(null);
+  const [onlineStatus, setOnlineStatus] = useState<string | null>(null);
+  const channelRef = useRef<any>(null);
+  const [clientPlayerId] = useState(() =>
+    playerName ? `user:${playerName}` : `guest-${Math.random().toString(36).slice(2, 10)}`
+  );
 
   const legalMoves = useMemo(
     () => (callTimer === null ? getLegalMoves(board, selectedSquare, turn, calledSquare) : []),
     [board, callTimer, calledSquare, selectedSquare, turn]
+  );
+
+  const applyRemoteState = useCallback(
+    (data: GameRoom) => {
+      setBoard(deserializeBoard(data.board_state));
+      setTurn(data.turn);
+      setGameState(data.status === 'finished' ? 'finished' : 'active');
+      setWinner(data.winner ?? null);
+      setCalledSquare(data.called_square ?? null);
+      setMoveHistory(data.move_history ?? []);
+      if (data.player_id_red === clientPlayerId) {
+        setPlayerColor('red');
+      } else if (data.player_id_blue === clientPlayerId) {
+        setPlayerColor('blue');
+      }
+
+      setOnlineStatus(
+        data.status === 'waiting'
+          ? 'Waiting for an opponent to join...'
+          : 'Room synced with server'
+      );
+    },
+    [clientPlayerId]
+  );
+
+  const syncRemoteGame = useCallback(
+    async (
+      updatedBoard: RekBoard,
+      nextTurn: Player,
+      nextGameState: GameState,
+      nextWinner: Player | null,
+      nextCalledSquare: Square | null,
+      nextMoveHistory: MoveHistoryItem[]
+    ) => {
+      if (!isOnline || !roomCode) {
+        return;
+      }
+
+      const supabase = createClient();
+      await supabase
+        .from('games')
+        .update({
+          board_state: serializeBoard(updatedBoard),
+          turn: nextTurn,
+          status: nextGameState === 'finished' ? 'finished' : 'in_progress',
+          winner: nextWinner,
+          called_square: nextCalledSquare,
+          move_history: nextMoveHistory,
+        })
+        .eq('room_code', roomCode);
+    },
+    [isOnline, roomCode]
   );
 
   useEffect(() => {
@@ -292,13 +373,128 @@ export default function ChessGame({
     return () => window.clearTimeout(timeoutId);
   }, [callTimer]);
 
+  useEffect(() => {
+    if (!isOnline || !roomCode) {
+      return;
+    }
+
+    const supabase = createClient();
+    let isActive = true;
+
+    const joinOrCreateRoom = async () => {
+      const playerLabel = playerName ?? `Guest ${clientPlayerId.slice(6)}`;
+
+      const { data: existingRoom, error: selectError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('room_code', roomCode)
+        .maybeSingle();
+
+      if (selectError) {
+        setOnlineStatus('Unable to load room details.');
+        return;
+      }
+
+      if (!existingRoom) {
+        const { data: createdRoom, error: insertError } = await supabase
+          .from('games')
+          .insert({
+            room_code: roomCode,
+            board_state: createInitialBoard(),
+            turn: 'red',
+            status: 'waiting',
+            player_red: playerLabel,
+            player_blue: null,
+            player_id_red: clientPlayerId,
+            player_id_blue: null,
+            called_square: null,
+            move_history: [],
+            winner: null,
+          })
+          .select()
+          .single();
+
+        if (insertError || !createdRoom) {
+          setOnlineStatus('Unable to create the game room.');
+          return;
+        }
+
+        applyRemoteState(createdRoom);
+        return;
+      }
+
+      if (existingRoom.player_id_red === clientPlayerId) {
+        applyRemoteState(existingRoom);
+        return;
+      }
+
+      if (!existingRoom.player_id_blue) {
+        const { data: joinedRoom, error: updateError } = await supabase
+          .from('games')
+          .update({
+            player_blue: playerLabel,
+            player_id_blue: clientPlayerId,
+            status: existingRoom.status === 'finished' ? 'finished' : 'in_progress',
+          })
+          .eq('room_code', roomCode)
+          .select()
+          .single();
+
+        if (updateError || !joinedRoom) {
+          setOnlineStatus('Unable to join this room.');
+          return;
+        }
+
+        applyRemoteState(joinedRoom);
+        return;
+      }
+
+      const isPlayer =
+        existingRoom.player_id_red === clientPlayerId ||
+        existingRoom.player_id_blue === clientPlayerId;
+
+      if (isPlayer) {
+        applyRemoteState(existingRoom);
+      } else {
+        setOnlineStatus('Room is already full. You are watching a spectator board.');
+      }
+    };
+
+    joinOrCreateRoom();
+
+    const channel = supabase
+      .channel(`room:${roomCode}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'games', filter: `room_code=eq.${roomCode}` },
+        (payload) => {
+          if (!isActive || !payload.new) {
+            return;
+          }
+
+          applyRemoteState(payload.new as GameRoom);
+        }
+      );
+
+    channel.subscribe();
+    channelRef.current = channel;
+
+    return () => {
+      isActive = false;
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [clientPlayerId, isOnline, playerName, roomCode, applyRemoteState]);
+
   const endCallWindow = useCallback((): void => {
     setCallTimer(null);
     setSelectedSquare(null);
     setTurn((current) => getNextPlayer(current));
   }, []);
 
-  const resetGame = useCallback((): void => {
+  const resetGame = useCallback(async (): Promise<void> => {
     setBoard(createInitialBoard());
     setTurn('red');
     setSelectedSquare(null);
@@ -309,7 +505,13 @@ export default function ChessGame({
     setShowMoveHistory(true);
     setCalledSquare(null);
     setCallTimer(null);
-  }, []);
+
+    if (isOnline && roomCode) {
+      syncRemoteGame(createInitialBoard(), 'red', 'active', null, null, []).catch(() => {
+        setOnlineStatus('Unable to reset online room state.');
+      });
+    }
+  }, [isOnline, roomCode, syncRemoteGame]);
 
   const undoMove = useCallback((): void => {
     const previousBoard = boardHistory.at(-1);
@@ -319,16 +521,24 @@ export default function ChessGame({
       return;
     }
 
+    const nextHistory = moveHistory.slice(0, -1);
+
     setBoard(previousBoard);
     setBoardHistory((prev) => prev.slice(0, -1));
-    setMoveHistory((prev) => prev.slice(0, -1));
+    setMoveHistory(nextHistory);
     setTurn(previousMove?.player ?? 'red');
     setSelectedSquare(null);
     setGameState('active');
     setWinner(null);
     setCalledSquare(null);
     setCallTimer(null);
-  }, [boardHistory, moveHistory]);
+
+    if (isOnline && roomCode) {
+      syncRemoteGame(previousBoard, previousMove?.player ?? 'red', 'active', null, null, nextHistory).catch(() => {
+        setOnlineStatus('Unable to sync undo with online room state.');
+      });
+    }
+  }, [boardHistory, moveHistory, isOnline, roomCode, syncRemoteGame]);
 
   const makeMove = useCallback((from: Square, to: Square): void => {
     if (!isLegalMove(board, from, to, turn, calledSquare)) {
@@ -340,6 +550,11 @@ export default function ChessGame({
     const captured = nextBoard[to.row][to.col];
 
     if (!piece) {
+      return;
+    }
+
+    if (isOnline && playerColor && turn !== playerColor) {
+      setOnlineStatus('It is not your turn.');
       return;
     }
 
@@ -359,19 +574,19 @@ export default function ChessGame({
       nextBoard[square.row][square.col] = null;
     });
 
+    const nextMove = {
+      from: squareName(from),
+      to: squareName(to),
+      piece: piece.role,
+      player: piece.player,
+      captured: capturedRoles[0],
+      captures: capturedRoles,
+    };
+    const nextHistory = [...moveHistory, nextMove];
+
     setBoardHistory((prev) => [...prev, cloneBoard(board)]);
     setBoard(nextBoard);
-    setMoveHistory((prev) => [
-      ...prev,
-      {
-        from: squareName(from),
-        to: squareName(to),
-        piece: piece.role,
-        player: piece.player,
-        captured: capturedRoles[0],
-        captures: capturedRoles,
-      },
-    ]);
+    setMoveHistory(nextHistory);
     setSelectedSquare(null);
     setCalledSquare(null);
 
@@ -379,43 +594,73 @@ export default function ChessGame({
       setCallTimer(null);
       setWinner(piece.player);
       setGameState('finished');
+      if (isOnline && roomCode) {
+        syncRemoteGame(nextBoard, piece.player, 'finished', piece.player, null, nextHistory).catch(() => {
+          setOnlineStatus('Unable to sync finished game state.');
+        });
+      }
       return;
     }
 
     setTurn(piece.player);
     setCallTimer(30);
-  }, [board, calledSquare, turn]);
 
-  const handleSquareClick = useCallback((square: Square): void => {
-    if (gameState === 'finished') {
-      return;
+    if (isOnline && roomCode) {
+      syncRemoteGame(nextBoard, piece.player, 'active', null, null, nextHistory).catch(() => {
+        setOnlineStatus('Unable to sync move with online room state.');
+      });
     }
+  }, [board, calledSquare, isOnline, moveHistory, playerColor, roomCode, syncRemoteGame, turn]);
 
-    if (callTimer !== null) {
-      if (canCallSquare(board, square, turn)) {
-        setCalledSquare(square);
-        setCallTimer(null);
-        setSelectedSquare(null);
-        setTurn(getNextPlayer(turn));
+  const handleSquareClick = useCallback(
+    (square: Square): void => {
+      if (gameState === 'finished') {
+        return;
       }
 
-      return;
-    }
+      if (isOnline && playerColor === null) {
+        setOnlineStatus('Connecting to room...');
+        return;
+      }
 
-    const piece = board[square.row][square.col];
+      if (isOnline && playerColor && turn !== playerColor) {
+        setOnlineStatus('Waiting for the other player to move.');
+        return;
+      }
 
-    if (selectedSquare && isLegalMove(board, selectedSquare, square, turn, calledSquare)) {
-      makeMove(selectedSquare, square);
-      return;
-    }
+      if (callTimer !== null) {
+        if (canCallSquare(board, square, turn)) {
+          setCalledSquare(square);
+          setCallTimer(null);
+          setSelectedSquare(null);
+          setTurn(getNextPlayer(turn));
 
-    if (piece?.player === turn) {
-      setSelectedSquare(square);
-      return;
-    }
+          if (isOnline && roomCode) {
+            syncRemoteGame(board, getNextPlayer(turn), 'active', null, square, moveHistory).catch(() => {
+              setOnlineStatus('Unable to sync call state.');
+            });
+          }
+        }
 
-    setSelectedSquare(null);
-  }, [board, callTimer, calledSquare, gameState, makeMove, selectedSquare, turn]);
+        return;
+      }
+
+      const piece = board[square.row][square.col];
+
+      if (selectedSquare && isLegalMove(board, selectedSquare, square, turn, calledSquare)) {
+        makeMove(selectedSquare, square);
+        return;
+      }
+
+      if (piece?.player === turn) {
+        setSelectedSquare(square);
+        return;
+      }
+
+      setSelectedSquare(null);
+    },
+    [board, callTimer, calledSquare, gameState, isOnline, makeMove, moveHistory, playerColor, roomCode, selectedSquare, syncRemoteGame, turn]
+  );
 
   const statusMessage = winner
     ? `${getPlayerLabel(winner)} captured the king and wins`
@@ -433,8 +678,10 @@ export default function ChessGame({
           <span>{isOnline ? 'Private Room' : 'Pass & Play'}</span>
           {roomCode && <span>Room {roomCode}</span>}
           {playerName && <span>{playerName}</span>}
+          {playerColor && isOnline && <span>You are {getPlayerLabel(playerColor)}</span>}
         </div>
         <div className={styles.status}>{statusMessage}</div>
+        {onlineStatus && <div className={styles.status}>{onlineStatus}</div>}
         <div className={styles.buttonGroup}>
           {onExit && (
             <button onClick={onExit} className={styles.exitButton}>
