@@ -293,6 +293,7 @@ export default function ChessGame({
   const [playerColor, setPlayerColor] = useState<Player | null>(null);
   const [onlineStatus, setOnlineStatus] = useState<string | null>(null);
   const [waitingForOpponent, setWaitingForOpponent] = useState<boolean>(false);
+  const [realtimeActive, setRealtimeActive] = useState(false);
   const channelRef = useRef<any>(null);
   const [clientPlayerId] = useState(() =>
     playerName ? `user:${playerName}` : `guest-${Math.random().toString(36).slice(2, 10)}`
@@ -333,6 +334,7 @@ export default function ChessGame({
     const timeoutId = window.setTimeout(() => {
       if (callTimer <= 1) {
         setCallTimer(null);
+        setCalledSquare(null);
         setSelectedSquare(null);
         setTurn((current) => getNextPlayer(current));
         return;
@@ -433,16 +435,27 @@ export default function ChessGame({
             return;
           }
 
+          console.log('Real-time update received:', payload);
           applyRemoteState(payload.new as GameRoom);
         }
-      );
+      )
+      .on('system', { event: 'subscribe' }, () => {
+        console.log('Real-time subscription established');
+        setRealtimeActive(true);
+        setOnlineStatus('Real-time sync active');
+      })
+      .on('system', { event: 'error' }, (err) => {
+        console.error('Real-time subscription error:', err);
+        setRealtimeActive(false);
+        setOnlineStatus('Real-time sync failed. Using polling as backup...');
+      });
 
     channel.subscribe();
-    setOnlineStatus('Realtime subscription started.');
     channelRef.current = channel;
 
     return () => {
       isActive = false;
+      setRealtimeActive(false);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
@@ -450,9 +463,40 @@ export default function ChessGame({
     };
   }, [clientPlayerId, isOnline, playerName, roomCode, applyRemoteState]);
 
+  useEffect(() => {
+    if (!isOnline || !roomCode) {
+      return;
+    }
+
+    // Keep polling active as a backup, even when real-time is active
+    const intervalId = window.setInterval(async () => {
+      try {
+        const res = await fetch(`/api/supabase/games?room=${encodeURIComponent(roomCode)}`);
+        if (!res.ok) {
+          return;
+        }
+
+        const existingRoom = await res.json();
+        if (existingRoom) {
+          // Only update if real-time isn't active to avoid double updates
+          if (!realtimeActive) {
+            applyRemoteState(existingRoom);
+          }
+        }
+      } catch {
+        // Silence polling errors
+      }
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [applyRemoteState, isOnline, realtimeActive, roomCode]);
+
 
   const endCallWindow = useCallback((): void => {
     setCallTimer(null);
+    setCalledSquare(null);
     setSelectedSquare(null);
     setTurn((current) => getNextPlayer(current));
   }, []);
@@ -607,11 +651,6 @@ export default function ChessGame({
         return;
       }
 
-      if (isOnline && playerColor && turn !== playerColor) {
-        setOnlineStatus('Waiting for the other player to move.');
-        return;
-      }
-
       if (callTimer !== null) {
         if (canCallSquare(board, square, turn)) {
           setCalledSquare(square);
@@ -628,6 +667,11 @@ export default function ChessGame({
             }
         }
 
+        return;
+      }
+
+      if (isOnline && playerColor && turn !== playerColor) {
+        setOnlineStatus('Waiting for the other player to move.');
         return;
       }
 
