@@ -1,0 +1,82 @@
+/* components/Navbar.module.css */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(16px);
+  background: rgba(15, 23, 42, 0.7);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  transition: all 0.2s ease;
+}
+
+.scrolled {
+  background: rgba(2, 6, 23, 0.85);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f0f9ff, #5eead4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-decoration: none;
+}
+
+.logoIcon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.navLink {
+  color: #cbd5e6;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+  font-size: 1rem;
+}
+
+.navLink:hover {
+  color: #2dd4bf;
+}
+
+.userBadge {
+  background: rgba(45, 212, 191, 0.15);
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a5f3fc;
+  border: 1px solid rgba(45,212,191,0.3);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 12px 20px;
+  }
+  .logo {
+    font-size: 1.2rem;
+  }
+  .links {
+    gap: 16px;
+  }
+}

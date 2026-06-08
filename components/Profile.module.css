@@ -1,0 +1,183 @@
+/* app/profile/profile.module.css */
+.profileContainer {
+  min-height: calc(100vh - 140px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 24px;
+  background: radial-gradient(circle at 10% 20%, #0a0f1e, #030614);
+}
+
+.profileCard {
+  max-width: 800px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  border-radius: 48px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 40px;
+  animation: fadeSlideUp 0.5s ease;
+}
+
+.avatarSection {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.avatar {
+  font-size: 5rem;
+  background: linear-gradient(145deg, #38bdf8, #2dd4bf);
+  width: 110px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  border-radius: 60px;
+  box-shadow: 0 15px 30px -10px rgba(0,0,0,0.4);
+}
+
+.profileName {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+  background: linear-gradient(135deg, #fff, #a5f3fc);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.profileEmail {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin: 36px 0;
+}
+
+.statCard {
+  background: rgba(2, 6, 23, 0.6);
+  border-radius: 28px;
+  padding: 20px 12px;
+  text-align: center;
+  border: 1px solid rgba(45, 212, 191, 0.2);
+  transition: transform 0.2s;
+}
+
+.statCard:hover {
+  transform: translateY(-3px);
+  border-color: #2dd4bf;
+}
+
+.statValue {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #2dd4bf;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.recentSection h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  border-left: 4px solid #2dd4bf;
+  padding-left: 16px;
+  color: #e2e8f0;
+}
+
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.matchItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.3);
+  padding: 14px 20px;
+  border-radius: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.winBadge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  padding: 4px 12px;
+  border-radius: 40px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.lossBadge {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  padding: 4px 12px;
+  border-radius: 40px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.matchDate {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.noMatches {
+  color: #94a3b8;
+  text-align: center;
+  padding: 24px;
+}
+
+.loaderContainer {
+  min-height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(56, 189, 248, 0.2);
+  border-top: 4px solid #2dd4bf;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 700px) {
+  .profileCard {
+    padding: 28px;
+  }
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+}

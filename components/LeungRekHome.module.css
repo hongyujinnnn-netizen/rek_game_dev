@@ -1,275 +1,446 @@
+/* LeungRekHome.module.css - Modern Glassmorphism Redesign */
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap');
+
 .shell {
+  /* Font & base reset */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #f1f5f9;
+  
+  /* Modern layout */
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 420px;
   min-height: 100vh;
-  gap: 24px;
+  gap: 28px;
   padding: 32px;
-  color: #251b14;
-  background:
-    linear-gradient(rgba(22, 28, 35, 0.58), rgba(22, 28, 35, 0.7)),
-    repeating-linear-gradient(45deg, #8a6a43 0 18px, #705132 18px 36px);
+  position: relative;
+  isolation: isolate;
+  
+  /* Animated gradient background */
+  background: radial-gradient(circle at 20% 30%, #0a0f1e, #030614);
+  overflow-x: hidden;
 }
 
+/* Animated floating orbs (modern background effect) */
+.shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 70% 10%, rgba(56, 189, 248, 0.15), transparent 50%),
+              radial-gradient(circle at 20% 90%, rgba(16, 185, 129, 0.12), transparent 55%);
+  pointer-events: none;
+  z-index: -2;
+}
+
+.shell::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: -20%;
+  width: 120%;
+  height: 120%;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 12px);
+  pointer-events: none;
+  z-index: -1;
+  animation: subtleShift 30s linear infinite;
+}
+
+@keyframes subtleShift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(2%, 1%) rotate(0.5deg); }
+}
+
+/* Glassmorphic panel base */
 .playPanel,
 .accountPanel {
-  background: rgba(253, 250, 241, 0.96);
-  border: 1px solid rgba(66, 41, 24, 0.18);
-  border-radius: 8px;
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 32px;
+  box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: transform 0.2s ease, border-color 0.2s;
 }
 
 .playPanel {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 24px;
-  padding: 36px;
+  gap: 28px;
+  padding: 44px 40px;
 }
 
+/* Brand section with gradient text */
 .brandBlock {
-  max-width: 760px;
+  max-width: 680px;
 }
 
 .kicker {
-  margin: 0 0 8px;
-  color: #247a5a;
-  font-size: 0.86rem;
-  font-weight: 800;
+  margin: 0 0 12px;
+  background: linear-gradient(135deg, #38bdf8, #2dd4bf);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  display: inline-block;
 }
 
 .brandBlock h1 {
   margin: 0;
-  color: #251b14;
-  font-size: clamp(2.6rem, 7vw, 5.2rem);
-  line-height: 0.95;
+  font-size: clamp(3rem, 8vw, 5.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #f0f9ff, #a5f3fc, #5eead4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  line-height: 1.1;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .summary {
   max-width: 560px;
-  margin: 14px 0 0;
-  color: #5e4937;
+  margin: 20px 0 0;
+  color: #cbd5e6;
   font-size: 1.08rem;
   line-height: 1.5;
+  font-weight: 400;
+  backdrop-filter: blur(4px);
 }
 
+/* Mode cards grid */
 .modeGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 18px;
+  margin: 12px 0 8px;
 }
 
 .modeCard {
-  min-height: 148px;
-  padding: 18px;
+  min-height: 160px;
+  padding: 22px 20px;
   text-align: left;
-  background: #f1e6d4;
-  border: 1px solid rgba(66, 41, 24, 0.16);
-  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 28px;
   cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.modeCard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.12), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.modeCard:hover::after {
+  opacity: 1;
 }
 
 .modeCard:hover,
 .modeCard:focus-visible {
-  border-color: rgba(36, 122, 90, 0.68);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.16);
-  outline: 0;
+  border-color: #2dd4bf;
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(45, 212, 191, 0.3);
+  background: rgba(30, 41, 59, 0.7);
+  outline: none;
 }
 
 .modeTitle {
   display: block;
-  color: #251b14;
-  font-size: 1.18rem;
-  font-weight: 900;
+  color: #e2e8f0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: 10px;
 }
 
 .modeText {
   display: block;
-  margin-top: 8px;
-  color: #6a5541;
-  font-size: 0.96rem;
-  line-height: 1.35;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 400;
 }
 
+/* Room join - modern compact glass */
 .roomJoin {
-  padding: 18px;
-  background: #efe4cf;
-  border: 1px solid rgba(66, 41, 24, 0.16);
-  border-radius: 8px;
+  padding: 22px 24px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 28px;
+  transition: all 0.2s;
 }
 
 .roomJoin label,
 .authForm label {
   display: grid;
-  gap: 7px;
-  color: #4d3828;
-  font-size: 0.9rem;
-  font-weight: 800;
+  gap: 10px;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .joinControls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .joinControls input,
 .authForm input {
   min-width: 0;
-  padding: 11px 12px;
-  color: #251b14;
+  padding: 14px 16px;
+  color: #f1f5f9;
   font: inherit;
-  background: #fffaf0;
-  border: 1px solid rgba(66, 41, 24, 0.22);
-  border-radius: 6px;
+  font-weight: 500;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 20px;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.joinControls input:focus,
+.authForm input:focus {
+  outline: none;
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+  background: rgba(2, 6, 23, 0.9);
 }
 
 .joinControls button,
 .authForm > button,
 .secondaryButton {
-  padding: 11px 14px;
-  color: #fff;
-  font-weight: 900;
-  background: #247a5a;
-  border: 0;
-  border-radius: 6px;
+  padding: 12px 20px;
+  color: #ffffff;
+  font-weight: 700;
+  background: linear-gradient(105deg, #0f766e, #0d9488);
+  border: none;
+  border-radius: 40px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.joinControls button:hover,
+.authForm > button:hover:not(:disabled),
+.secondaryButton:hover:not(:disabled) {
+  background: linear-gradient(105deg, #0d9488, #0f766e);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(13, 148, 136, 0.35);
 }
 
 .joinControls button:disabled,
 .authForm > button:disabled,
 .secondaryButton:disabled {
-  color: #715f50;
-  background: #d8c8b4;
+  background: #334155;
+  color: #94a3b8;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
+/* Account panel specific modern touches */
 .accountPanel {
   align-self: stretch;
-  padding: 22px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .accountHeader {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
 }
 
 .accountHeader h2 {
   margin: 0;
-  color: #251b14;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #e2e8f0, #b9e6f0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .accountHeader span {
-  padding: 5px 8px;
-  color: #247a5a;
-  font-size: 0.78rem;
-  font-weight: 900;
-  background: #dcebdd;
-  border-radius: 6px;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.2);
+  backdrop-filter: blur(4px);
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #5eead4;
+  border: 0.5px solid rgba(94, 234, 212, 0.3);
 }
 
-.authForm,
-.profileCard {
-  display: grid;
-  gap: 14px;
-}
-
+/* Auth tabs modern */
 .authTabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 12px;
+  background: rgba(2, 6, 23, 0.5);
+  padding: 5px;
+  border-radius: 48px;
+  margin-bottom: 10px;
 }
 
 .authTabs button {
-  padding: 9px 10px;
-  color: #705132;
-  font-weight: 900;
-  background: #efe4cf;
-  border: 1px solid rgba(66, 41, 24, 0.14);
-  border-radius: 6px;
+  padding: 10px 12px;
+  color: #cbd5e6;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-radius: 40px;
   cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
 }
 
 .authTabs .activeTab {
-  color: #fff;
-  background: #705132;
+  color: #0f172a;
+  background: #2dd4bf;
+  box-shadow: 0 2px 8px rgba(45, 212, 191, 0.3);
 }
 
+/* profile card */
 .profileCard {
-  padding: 16px;
-  background: #f1e6d4;
-  border-radius: 8px;
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 28px;
+  border: 1px solid rgba(56, 189, 248, 0.15);
 }
 
 .profileName {
   margin: 0;
-  color: #251b14;
-  font-size: 1.28rem;
-  font-weight: 900;
+  font-size: 1.55rem;
+  font-weight: 700;
+  background: linear-gradient(145deg, #fff, #a5f3fc);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .profileEmail {
-  margin: 3px 0 0;
-  color: #705132;
-  font-size: 0.9rem;
+  margin: 5px 0 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
 }
 
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 14px;
+  margin: 8px 0;
 }
 
 .statsGrid span {
-  padding: 12px;
-  color: #5e4937;
-  background: #fffaf0;
-  border-radius: 6px;
+  padding: 16px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  border-radius: 24px;
+  text-align: center;
+  color: #cbd5e1;
+  font-weight: 500;
+  border: 1px solid rgba(45, 212, 191, 0.2);
 }
 
 .statsGrid strong {
   display: block;
-  color: #251b14;
-  font-size: 1.5rem;
+  color: #2dd4bf;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 6px;
 }
 
 .secondaryButton {
-  background: #9a5b20;
+  background: linear-gradient(105deg, #4b5563, #374151);
 }
 
 .authMessage {
   margin: 16px 0 0;
-  padding: 12px;
-  color: #79411d;
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.35;
-  background: #f7e5c7;
-  border-radius: 6px;
+  padding: 12px 18px;
+  color: #facc15;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: rgba(250, 204, 21, 0.1);
+  border-left: 3px solid #facc15;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
 }
 
-@media (max-width: 900px) {
+/* Custom responsive */
+@media (max-width: 1000px) {
   .shell {
     grid-template-columns: 1fr;
-    padding: 16px;
+    gap: 24px;
+    padding: 20px;
   }
-
-  .playPanel,
-  .accountPanel {
-    padding: 18px;
+  .playPanel {
+    padding: 32px 28px;
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 640px) {
   .modeGrid,
   .joinControls {
     grid-template-columns: 1fr;
   }
+  .playPanel {
+    padding: 24px 20px;
+  }
+  .accountPanel {
+    padding: 20px;
+  }
+  .modeCard {
+    min-height: 130px;
+  }
+  .brandBlock h1 {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+  }
 }
+
+/* Additional modern microinteractions */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.playPanel > *,
+.accountPanel > * {
+  animation: fadeSlideUp 0.4s ease backwards;
+}
+
+.playPanel > *:nth-child(1) { animation-delay: 0.05s; }
+.playPanel > *:nth-child(2) { animation-delay: 0.1s; }
+.playPanel > *:nth-child(3) { animation-delay: 0.15s; }
+.accountPanel > *:nth-child(1) { animation-delay: 0.05s; }
+.accountPanel > *:nth-child(2) { animation-delay: 0.1s; }

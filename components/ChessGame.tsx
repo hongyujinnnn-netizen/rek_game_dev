@@ -113,7 +113,6 @@ function isBasicLegalMove(board: RekBoard, from: Square, to: Square, turn: Playe
   if (
     !piece ||
     piece.player !== turn ||
-    piece.role === 'king' ||
     !movesInStraightLine ||
     staysStill ||
     target
@@ -124,21 +123,30 @@ function isBasicLegalMove(board: RekBoard, from: Square, to: Square, turn: Playe
   return isPathClear(board, from, to);
 }
 
-function getCustodianCaptureSquares(board: RekBoard, to: Square, player: Player): Square[] {
+function getInterventionCaptureSquares(board: RekBoard, to: Square, player: Player): Square[] {
   const captures: Square[] = [];
-  const left = { row: to.row, col: to.col - 1 };
-  const right = { row: to.row, col: to.col + 1 };
-  const up = { row: to.row - 1, col: to.col };
-  const down = { row: to.row + 1, col: to.col };
-  const hasEnemy = (square: Square): boolean =>
-    isWithinBoard(square) && board[square.row][square.col]?.player !== player && Boolean(board[square.row][square.col]);
 
-  if (hasEnemy(left) && hasEnemy(right)) {
-    captures.push(left, right);
-  }
+  // Check opposing direction pairs: horizontal (left/right) and vertical (up/down).
+  // If the piece lands between two enemy pieces on the same axis, both are captured.
+  const axes: Array<{ row: number; col: number }[]> = [
+    [{ row: 0, col: -1 }, { row: 0, col: 1 }],   // horizontal: left & right
+    [{ row: -1, col: 0 }, { row: 1, col: 0 }],    // vertical: up & down
+  ];
 
-  if (hasEnemy(up) && hasEnemy(down)) {
-    captures.push(up, down);
+  for (const [dirA, dirB] of axes) {
+    const squareA = { row: to.row + dirA.row, col: to.col + dirA.col };
+    const squareB = { row: to.row + dirB.row, col: to.col + dirB.col };
+
+    if (
+      isWithinBoard(squareA) &&
+      isWithinBoard(squareB) &&
+      board[squareA.row][squareA.col] !== null &&
+      board[squareA.row][squareA.col]?.player !== player &&
+      board[squareB.row][squareB.col] !== null &&
+      board[squareB.row][squareB.col]?.player !== player
+    ) {
+      captures.push(squareA, squareB);
+    }
   }
 
   return captures;
@@ -159,30 +167,13 @@ function getSplitCapturesForMove(board: RekBoard, from: Square, to: Square, play
   nextBoard[to.row][to.col] = piece;
   nextBoard[from.row][from.col] = null;
 
-  return getCustodianCaptureSquares(nextBoard, to, player);
+  return getInterventionCaptureSquares(nextBoard, to, player);
 }
 
 function doesMoveCapture(board: RekBoard, from: Square, to: Square, player: Player): boolean {
   return getSplitCapturesForMove(board, from, to, player).length > 0;
 }
 
-function hasAnyCapturingMove(board: RekBoard, player: Player): boolean {
-  return board.some((row, rowIndex) =>
-    row.some((piece, colIndex) => {
-      if (!piece || piece.player !== player) {
-        return false;
-      }
-
-      return Array.from({ length: BOARD_SIZE }, (_, toRow) =>
-        Array.from({ length: BOARD_SIZE }, (_, toCol) =>
-          doesMoveCapture(board, { row: rowIndex, col: colIndex }, { row: toRow, col: toCol }, player)
-        )
-      )
-        .flat()
-        .some(Boolean);
-    })
-  );
-}
 
 function isLegalMove(
   board: RekBoard,
@@ -199,11 +190,14 @@ function isLegalMove(
     return true;
   }
 
-  if (hasAnyCapturingMove(board, turn)) {
-    return doesMoveCapture(board, from, to, turn);
+  // When a square is called, the forced player can either:
+  // 1. Move one of their pieces to the called square, OR
+  // 2. Make any move that results in a custodian capture (kill).
+  if (isSameSquare(to, calledSquare)) {
+    return true;
   }
 
-  return isSameSquare(calledSquare, to);
+  return doesMoveCapture(board, from, to, turn);
 }
 
 function getLegalMoves(
@@ -245,24 +239,13 @@ function hasLegalMoveToSquare(board: RekBoard, square: Square, player: Player): 
   );
 }
 
-function hasLegalCapturingMoveToSquare(board: RekBoard, square: Square, player: Player): boolean {
-  return board.some((row, rowIndex) =>
-    row.some((piece, colIndex) =>
-      Boolean(
-        piece && piece.player === player && doesMoveCapture(board, { row: rowIndex, col: colIndex }, square, player)
-      )
-    )
-  );
-}
-
 function canCallSquare(board: RekBoard, square: Square, callingPlayer: Player): boolean {
   const forcedPlayer = getNextPlayer(callingPlayer);
 
   return (
     isWithinBoard(square) &&
     !board[square.row][square.col] &&
-    hasLegalMoveToSquare(board, square, forcedPlayer) &&
-    hasLegalCapturingMoveToSquare(board, square, forcedPlayer)
+    hasLegalMoveToSquare(board, square, forcedPlayer)
   );
 }
 
@@ -306,21 +289,30 @@ export default function ChessGame({
 
   const applyRemoteState = useCallback(
     (data: GameRoom) => {
-      setBoard(deserializeBoard(data.board_state));
-      setTurn(data.turn);
-      setGameState(data.status === 'finished' ? 'finished' : 'active');
-      setWinner(data.winner ?? null);
-      setCalledSquare(data.called_square ?? null);
-      setMoveHistory(data.move_history ?? []);
-      if (data.player_id_red === clientPlayerId) {
-        setPlayerColor('red');
-      } else if (data.player_id_blue === clientPlayerId) {
-        setPlayerColor('blue');
+      try {
+        const boardState = typeof data.board_state === 'string' ? JSON.parse(data.board_state) : data.board_state;
+        const calledSquareData = typeof data.called_square === 'string' ? JSON.parse(data.called_square) : data.called_square;
+        const moveHistoryData = typeof data.move_history === 'string' ? JSON.parse(data.move_history) : (data.move_history ?? []);
+        
+        setBoard(deserializeBoard(boardState));
+        setTurn(data.turn);
+        setGameState(data.status === 'finished' ? 'finished' : 'active');
+        setWinner(data.winner ?? null);
+        setCalledSquare(calledSquareData ?? null);
+        setMoveHistory(Array.isArray(moveHistoryData) ? moveHistoryData : []);
+        if (data.player_id_red === clientPlayerId) {
+          setPlayerColor('red');
+        } else if (data.player_id_blue === clientPlayerId) {
+          setPlayerColor('blue');
+        }
+
+        setWaitingForOpponent(data.status === 'waiting' && (data.player_id_red === clientPlayerId || data.player_id_blue === clientPlayerId));
+
+        setOnlineStatus(data.status === 'waiting' ? 'Waiting for an opponent to join...' : 'Room synced with server');
+      } catch (err) {
+        console.error('Error applying remote state:', err);
+        setOnlineStatus('Error syncing game state from server');
       }
-
-      setWaitingForOpponent(data.status === 'waiting' && (data.player_id_red === clientPlayerId || data.player_id_blue === clientPlayerId));
-
-      setOnlineStatus(data.status === 'waiting' ? 'Waiting for an opponent to join...' : 'Room synced with server');
     },
     [clientPlayerId]
   );
@@ -333,10 +325,31 @@ export default function ChessGame({
 
     const timeoutId = window.setTimeout(() => {
       if (callTimer <= 1) {
-        setCallTimer(null);
-        setCalledSquare(null);
-        setSelectedSquare(null);
-        setTurn((current) => getNextPlayer(current));
+        // Use functional updater to avoid stale closure — reads latest turn value
+        setCallTimer((current) => {
+          // Guard: if callTimer was already cleared (e.g. by "End Call"), do nothing
+          if (current === null) {
+            return null;
+          }
+
+          setCalledSquare(null);
+          setSelectedSquare(null);
+          setTurn((currentTurn) => {
+            const nextTurn = getNextPlayer(currentTurn);
+
+            if (isOnline && roomCode) {
+              fetch('/api/supabase/games/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ room_code: roomCode, updates: { board_state: board, turn: nextTurn, status: 'active', winner: null, called_square: null, move_history: moveHistory } }),
+              }).catch(() => setOnlineStatus('Unable to sync call timeout with online room state.'));
+            }
+
+            return nextTurn;
+          });
+
+          return null;
+        });
         return;
       }
 
@@ -344,7 +357,7 @@ export default function ChessGame({
     }, 1000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [callTimer]);
+  }, [callTimer, turn, isOnline, roomCode, board, moveHistory]);
 
   useEffect(() => {
     if (!isOnline || !roomCode) {
@@ -435,8 +448,12 @@ export default function ChessGame({
             return;
           }
 
-          console.log('Real-time update received:', payload);
-          applyRemoteState(payload.new as GameRoom);
+          try {
+            console.log('Real-time update received:', payload);
+            applyRemoteState(payload.new as GameRoom);
+          } catch (err) {
+            console.error('Error processing real-time update:', err);
+          }
         }
       )
       .on('system', { event: 'subscribe' }, () => {
@@ -495,10 +512,19 @@ export default function ChessGame({
 
 
   const endCallWindow = useCallback((): void => {
-    setCallTimer(null);
-    setCalledSquare(null);
-    setSelectedSquare(null);
-    setTurn((current) => getNextPlayer(current));
+    // Guard: only advance the turn if the call window is actually open.
+    // Without this, rapid clicks or timer race conditions could double-advance the turn.
+    setCallTimer((current) => {
+      if (current === null) {
+        return null;
+      }
+
+      setCalledSquare(null);
+      setSelectedSquare(null);
+      setTurn((currentTurn) => getNextPlayer(currentTurn));
+
+      return null;
+    });
   }, []);
 
   const resetGame = useCallback(async (): Promise<void> => {
@@ -584,7 +610,7 @@ export default function ChessGame({
     nextBoard[to.row][to.col] = piece;
     nextBoard[from.row][from.col] = null;
 
-    const splitCaptures = getCustodianCaptureSquares(nextBoard, to, piece.player);
+    const splitCaptures = getInterventionCaptureSquares(nextBoard, to, piece.player);
     const capturedRoles: MoveHistoryItem['piece'][] = captured ? [captured.role] : [];
 
     splitCaptures.forEach((square) => {
@@ -627,15 +653,14 @@ export default function ChessGame({
       return;
     }
 
-    const nextTurn = getNextPlayer(piece.player);
-    setTurn(nextTurn);
+    // Don't switch turn yet — the player who just moved gets a 30s call window
     setCallTimer(30);
 
     if (isOnline && roomCode) {
       fetch('/api/supabase/games/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: nextTurn, status: 'active', winner: null, called_square: null, move_history: nextHistory } }),
+        body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: piece.player, status: 'active', winner: null, called_square: null, move_history: nextHistory } }),
       }).catch(() => setOnlineStatus('Unable to sync move with online room state.'));
     }
   }, [board, calledSquare, isOnline, moveHistory, playerColor, roomCode, turn]);
@@ -652,19 +677,25 @@ export default function ChessGame({
       }
 
       if (callTimer !== null) {
+        // In online mode, only the calling player (whose turn it is) can make a call
+        if (isOnline && playerColor && turn !== playerColor) {
+          return;
+        }
+
         if (canCallSquare(board, square, turn)) {
+          const forcedTurn = getNextPlayer(turn);
           setCalledSquare(square);
           setCallTimer(null);
           setSelectedSquare(null);
-          setTurn(getNextPlayer(turn));
+          setTurn(forcedTurn);
 
-            if (isOnline && roomCode) {
-              fetch('/api/supabase/games/update', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ room_code: roomCode, updates: { board_state: board, turn: getNextPlayer(turn), status: 'active', winner: null, called_square: square, move_history: moveHistory } }),
-              }).catch(() => setOnlineStatus('Unable to sync call state.'));
-            }
+          if (isOnline && roomCode) {
+            fetch('/api/supabase/games/update', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ room_code: roomCode, updates: { board_state: board, turn: forcedTurn, status: 'active', winner: null, called_square: square, move_history: moveHistory } }),
+            }).catch(() => setOnlineStatus('Unable to sync call state.'));
+          }
         }
 
         return;
@@ -695,7 +726,7 @@ export default function ChessGame({
   const statusMessage = winner
     ? `${getPlayerLabel(winner)} captured the king and wins`
     : calledSquare
-      ? `${getPlayerLabel(turn)} must capture; call at ${squareName(calledSquare)}`
+      ? `${getPlayerLabel(turn)} must move to ${squareName(calledSquare)} or capture`
       : callTimer !== null
         ? `${getPlayerLabel(turn)} may call: ${callTimer}s`
         : `${getPlayerLabel(turn)} to move`;

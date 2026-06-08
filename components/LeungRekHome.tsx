@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import ChessGame2 from './ChessGame_2';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import styles from './LeungRekHome.module.css';
 
 type GameConfig = {
@@ -134,7 +136,9 @@ export default function LeungRekHome() {
   }
 
   return (
-    <main className={styles.shell}>
+    <>
+      <Navbar />
+      <main className={styles.shell}>
       <section className={styles.playPanel} aria-label="Choose game mode">
         <div className={styles.brandBlock}>
           <p className={styles.kicker}>Traditional strategy board</p>
@@ -250,6 +254,8 @@ export default function LeungRekHome() {
 
         {authError && <p className={styles.authMessage}>{authError}</p>}
       </aside>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 }
