@@ -270,7 +270,6 @@ export default function ChessGame({
   const [winner, setWinner] = useState<Player | null>(null);
   const [moveHistory, setMoveHistory] = useState<MoveHistoryItem[]>([]);
   const [boardHistory, setBoardHistory] = useState<RekBoard[]>([]);
-  const [showMoveHistory, setShowMoveHistory] = useState(true);
   const [calledSquare, setCalledSquare] = useState<Square | null>(null);
   const [callTimer, setCallTimer] = useState<number | null>(null);
   const [playerColor, setPlayerColor] = useState<Player | null>(null);
@@ -288,22 +287,46 @@ export default function ChessGame({
   );
 
   const applyRemoteState = useCallback(
-    (data: GameRoom) => {
+    (data: GameRoom & { call_timer?: number | null }) => {
       try {
         const boardState = typeof data.board_state === 'string' ? JSON.parse(data.board_state) : data.board_state;
         const calledSquareData = typeof data.called_square === 'string' ? JSON.parse(data.called_square) : data.called_square;
         const moveHistoryData = typeof data.move_history === 'string' ? JSON.parse(data.move_history) : (data.move_history ?? []);
-        
+
+        // Determine which color this client plays
+        let myColor: Player | null = null;
+        if (data.player_id_red === clientPlayerId) {
+          myColor = 'red';
+        } else if (data.player_id_blue === clientPlayerId) {
+          myColor = 'blue';
+        }
+
+        // If the server says it's still this player's turn with an active call_timer,
+        // and we already have a local callTimer running, skip overwriting — we own
+        // this state locally while the call window is open.
+        const remoteCallTimer = data.call_timer ?? null;
+        const isMyCallWindow = myColor !== null && data.turn === myColor && remoteCallTimer !== null;
+
         setBoard(deserializeBoard(boardState));
-        setTurn(data.turn);
+        setMoveHistory(Array.isArray(moveHistoryData) ? moveHistoryData : []);
         setGameState(data.status === 'finished' ? 'finished' : 'active');
         setWinner(data.winner ?? null);
-        setCalledSquare(calledSquareData ?? null);
-        setMoveHistory(Array.isArray(moveHistoryData) ? moveHistoryData : []);
-        if (data.player_id_red === clientPlayerId) {
-          setPlayerColor('red');
-        } else if (data.player_id_blue === clientPlayerId) {
-          setPlayerColor('blue');
+
+        if (!isMyCallWindow) {
+          // Safe to apply turn and call state from server
+          setTurn(data.turn);
+          setCalledSquare(calledSquareData ?? null);
+          // If the remote has a call_timer set (opponent is in their call window),
+          // don't start a local timer — the opponent's client manages the countdown.
+          // Only clear callTimer if the server says null.
+          if (remoteCallTimer === null) {
+            setCallTimer(null);
+          }
+        }
+        // else: keep local turn, callTimer, and calledSquare as-is — we're in our call window
+
+        if (myColor) {
+          setPlayerColor(myColor);
         }
 
         setWaitingForOpponent(data.status === 'waiting' && (data.player_id_red === clientPlayerId || data.player_id_blue === clientPlayerId));
@@ -325,31 +348,21 @@ export default function ChessGame({
 
     const timeoutId = window.setTimeout(() => {
       if (callTimer <= 1) {
-        // Use functional updater to avoid stale closure — reads latest turn value
-        setCallTimer((current) => {
-          // Guard: if callTimer was already cleared (e.g. by "End Call"), do nothing
-          if (current === null) {
-            return null;
-          }
+        const nextTurn = getNextPlayer(turn);
 
-          setCalledSquare(null);
-          setSelectedSquare(null);
-          setTurn((currentTurn) => {
-            const nextTurn = getNextPlayer(currentTurn);
+        setCalledSquare(null);
+        setSelectedSquare(null);
+        setCallTimer(null);
+        setTurn(nextTurn);
 
-            if (isOnline && roomCode) {
-              fetch('/api/supabase/games/update', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ room_code: roomCode, updates: { board_state: board, turn: nextTurn, status: 'active', winner: null, called_square: null, move_history: moveHistory } }),
-              }).catch(() => setOnlineStatus('Unable to sync call timeout with online room state.'));
-            }
+        if (isOnline && roomCode) {
+          fetch('/api/supabase/games/update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_code: roomCode, updates: { board_state: board, turn: nextTurn, status: 'active', winner: null, called_square: null, move_history: moveHistory, call_timer: null } }),
+          }).catch(() => setOnlineStatus('Unable to sync call timeout with online room state.'));
+        }
 
-            return nextTurn;
-          });
-
-          return null;
-        });
         return;
       }
 
@@ -513,19 +526,33 @@ export default function ChessGame({
 
   const endCallWindow = useCallback((): void => {
     // Guard: only advance the turn if the call window is actually open.
-    // Without this, rapid clicks or timer race conditions could double-advance the turn.
-    setCallTimer((current) => {
-      if (current === null) {
-        return null;
-      }
+    if (callTimer === null) {
+      return;
+    }
 
-      setCalledSquare(null);
-      setSelectedSquare(null);
-      setTurn((currentTurn) => getNextPlayer(currentTurn));
+    const nextTurn = getNextPlayer(turn);
 
-      return null;
-    });
-  }, []);
+    setCalledSquare(null);
+    setSelectedSquare(null);
+    setCallTimer(null);
+    setTurn(nextTurn);
+
+    // Sync the turn change to Supabase so the remote state stays consistent
+    if (isOnline && roomCode) {
+      fetch('/api/supabase/games/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_code: roomCode,
+          updates: {
+            turn: nextTurn,
+            called_square: null,
+            call_timer: null,
+          },
+        }),
+      }).catch(() => setOnlineStatus('Unable to sync end-call with online room state.'));
+    }
+  }, [callTimer, turn, isOnline, roomCode]);
 
   const resetGame = useCallback(async (): Promise<void> => {
     setBoard(createInitialBoard());
@@ -535,7 +562,6 @@ export default function ChessGame({
     setWinner(null);
     setMoveHistory([]);
     setBoardHistory([]);
-    setShowMoveHistory(true);
     setCalledSquare(null);
     setCallTimer(null);
 
@@ -543,7 +569,7 @@ export default function ChessGame({
       fetch('/api/supabase/games/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_code: roomCode, updates: { board_state: createInitialBoard(), turn: 'red', status: 'active', winner: null, called_square: null, move_history: [] } }),
+        body: JSON.stringify({ room_code: roomCode, updates: { board_state: createInitialBoard(), turn: 'red', status: 'active', winner: null, called_square: null, call_timer: null, move_history: [] } }),
       }).catch(() => setOnlineStatus('Unable to reset online room state.'));
     }
   }, [isOnline, roomCode]);
@@ -584,7 +610,7 @@ export default function ChessGame({
       fetch('/api/supabase/games/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_code: roomCode, updates: { board_state: previousBoard, turn: previousMove?.player ?? 'red', status: 'active', winner: null, called_square: null, move_history: nextHistory } }),
+        body: JSON.stringify({ room_code: roomCode, updates: { board_state: previousBoard, turn: previousMove?.player ?? 'red', status: 'active', winner: null, called_square: null, call_timer: null, move_history: nextHistory } }),
       }).catch(() => setOnlineStatus('Unable to sync undo with online room state.'));
     }
   }, [boardHistory, moveHistory, isOnline, roomCode]);
@@ -647,7 +673,7 @@ export default function ChessGame({
         fetch('/api/supabase/games/update', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: getNextPlayer(piece.player), status: 'finished', winner: piece.player, called_square: null, move_history: nextHistory } }),
+          body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: getNextPlayer(piece.player), status: 'finished', winner: piece.player, called_square: null, call_timer: null, move_history: nextHistory } }),
         }).catch(() => setOnlineStatus('Unable to sync finished game state.'));
       }
       return;
@@ -660,7 +686,7 @@ export default function ChessGame({
       fetch('/api/supabase/games/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: piece.player, status: 'active', winner: null, called_square: null, move_history: nextHistory } }),
+        body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: piece.player, status: 'active', winner: null, called_square: null, move_history: nextHistory, call_timer: 30 } }),
       }).catch(() => setOnlineStatus('Unable to sync move with online room state.'));
     }
   }, [board, calledSquare, isOnline, moveHistory, playerColor, roomCode, turn]);
@@ -693,7 +719,7 @@ export default function ChessGame({
             fetch('/api/supabase/games/update', {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ room_code: roomCode, updates: { board_state: board, turn: forcedTurn, status: 'active', winner: null, called_square: square, move_history: moveHistory } }),
+              body: JSON.stringify({ room_code: roomCode, updates: { board_state: board, turn: forcedTurn, status: 'active', winner: null, called_square: square, move_history: moveHistory, call_timer: null } }),
             }).catch(() => setOnlineStatus('Unable to sync call state.'));
           }
         }
@@ -723,163 +749,209 @@ export default function ChessGame({
     [board, callTimer, calledSquare, gameState, isOnline, makeMove, moveHistory, playerColor, roomCode, selectedSquare, turn]
   );
 
-  const statusMessage = winner
-    ? `${getPlayerLabel(winner)} captured the king and wins`
-    : calledSquare
-      ? `${getPlayerLabel(turn)} must move to ${squareName(calledSquare)} or capture`
-      : callTimer !== null
-        ? `${getPlayerLabel(turn)} may call: ${callTimer}s`
-        : `${getPlayerLabel(turn)} to move`;
+  // Determine the opponent label for the top-right card
+  const opponentLabel = (() => {
+    if (!isOnline) return turn === 'red' ? 'Blue Player' : 'Red Player';
+    if (!playerColor) return 'Opponent';
+    return playerColor === 'red' ? 'Blue' : 'Red';
+  })();
+
+  const isMyTurn = !isOnline || turn === playerColor;
 
   return (
-    <div className={styles.container}>
+    <div className={styles.arenaWrapper}>
+      {/* Diagnostic banner */}
       {isOnline && !hasBrowserKey && (
         <div className={styles.diagnosticBanner} role="status" aria-live="polite">
-          Supabase client key missing in browser environment — online features may fail (check env vars).
+          Supabase key missing — online features may not work.
         </div>
       )}
-      <div className={styles.gameInfo}>
-        <h1>Leung Rek</h1>
-        <div className={styles.modeStatus}>
-          <span>{isOnline ? 'Private Room' : 'Pass & Play'}</span>
-          {roomCode && <span>Room {roomCode}</span>}
-          {playerName && <span>{playerName}</span>}
-          {playerColor && isOnline && <span>You are {getPlayerLabel(playerColor)}</span>}
-          {roomCode && isOnline && (
-            <span>
-              <button
-                type="button"
-                className={styles.copyButton}
-                onClick={() => {
-                  try {
-                    const invite = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
-                    navigator.clipboard.writeText(invite);
-                    setOnlineStatus('Invite link copied to clipboard');
-                  } catch (e) {
-                    setOnlineStatus('Unable to copy invite link');
-                  }
-                }}
-              >
-                Copy invite
-              </button>
-            </span>
-          )}
+
+      {/* ================= TOP LEFT: PLAYER ONE (YOU) ================= */}
+      <div className={`${styles.playerCard} ${styles.topLeftPlayer} ${isMyTurn ? styles.activeTurn : ''}`}>
+        <div className={styles.profileHeader}>
+          <span className={`${styles.badge} ${playerColor === 'blue' ? styles.blueBadge : styles.redBadge}`}></span>
+          <span className={styles.username}>{playerName || (isOnline ? 'You' : getPlayerLabel(turn))}</span>
         </div>
-        <div className={styles.status}>{statusMessage}</div>
-        {onlineStatus && <div className={styles.status}>{onlineStatus}</div>}
-        <div className={styles.buttonGroup}>
-          {onExit && (
-            <button onClick={onExit} className={styles.exitButton}>
-              Home
-            </button>
-          )}
-          <button onClick={resetGame} className={styles.resetButton}>
-            New Game
+        {isOnline && playerColor && (
+          <span className={styles.playerMeta}>{getPlayerLabel(playerColor)} • {isOnline ? 'Online' : 'Local'}</span>
+        )}
+
+        {/* Chess Clock */}
+        <div className={`${styles.chessClock} ${callTimer !== null && isMyTurn ? styles.clockAlert : ''}`}>
+          {callTimer !== null && isMyTurn
+            ? `00:${callTimer.toString().padStart(2, '0')}`
+            : isMyTurn ? 'YOUR TURN' : '--:--'}
+        </div>
+
+        {/* Inline call action */}
+        {callTimer !== null && isMyTurn && (
+          <button onClick={endCallWindow} className={styles.inlineCallBtn}>
+            Pass Call Window
           </button>
-          <button
-            onClick={undoMove}
-            className={styles.undoButton}
-            disabled={moveHistory.length === 0}
-          >
-            Undo Move
-          </button>
-          {callTimer !== null && (
-            <button onClick={endCallWindow} className={styles.callButton}>
-              End Call
-            </button>
-          )}
+        )}
+      </div>
+
+      {/* ================= TOP RIGHT: PLAYER TWO (OPPONENT) ================= */}
+      <div className={`${styles.playerCard} ${styles.topRightPlayer} ${!isMyTurn ? styles.activeTurn : ''}`}>
+        <div className={styles.profileHeader}>
+          <span className={`${styles.badge} ${playerColor === 'blue' ? styles.redBadge : styles.blueBadge}`}></span>
+          <span className={styles.username}>{opponentLabel}</span>
+        </div>
+        <div className={`${styles.chessClock} ${callTimer !== null && !isMyTurn ? styles.clockAlert : ''}`}>
+          {callTimer !== null && !isMyTurn
+            ? `00:${callTimer.toString().padStart(2, '0')}`
+            : !isMyTurn ? 'THINKING' : '--:--'}
         </div>
       </div>
 
-      <div className={styles.boardWrapper}>
-        {waitingForOpponent && (
-          <div className={styles.waitingOverlay} role="status" aria-live="polite">
-            <div className={styles.waitingMessage}>
-              <div>Waiting for an opponent to join...</div>
-              <div style={{ marginTop: 12 }}>
-                <button onClick={handleLeaveRoom} className={styles.leaveButton} type="button">
-                  Cancel & Leave
-                </button>
-              </div>
-            </div>
+      {/* ================= CENTER: MAIN GAME BOARD ================= */}
+      <main className={styles.centerStage}>
+        {calledSquare && (
+          <div className={styles.matchAlertBanner}>
+            ⚡ Forced Move: {squareName(calledSquare).toUpperCase()} or Capture!
           </div>
         )}
-        <div className={styles.board} role="grid" aria-label="Leung Rek board">
-          {board.map((row, rowIndex) =>
-            row.map((piece, colIndex) => {
-              const square = { row: rowIndex, col: colIndex };
-              const selected = isSameSquare(selectedSquare, square);
-              const called = isSameSquare(calledSquare, square);
-              const legal = legalMoves.some((move) => isSameSquare(move, square));
-              const capturable = legal && Boolean(piece && piece.player !== turn);
 
-              return (
-                <button
-                  key={`${rowIndex}-${colIndex}`}
-                  className={[
-                    styles.square,
-                    (rowIndex + colIndex) % 2 === 0 ? styles.lightSquare : styles.darkSquare,
-                    selected ? styles.selectedSquare : '',
-                    called ? styles.calledSquare : '',
-                    legal ? styles.legalSquare : '',
-                    capturable ? styles.captureSquare : '',
-                  ].join(' ')}
-                  onClick={() => handleSquareClick(square)}
-                  type="button"
-                  role="gridcell"
-                  aria-label={squareName(square)}
-                >
-                  {piece && (
-                    <span className={`${styles.piece} ${styles[piece.player]}`}>
-                      <span className={styles.pieceRole}>
-                        {piece.role === 'king' ? 'SD' : 'KON'}
-                      </span>
-                    </span>
-                  )}
-                </button>
-              );
-            })
-          )}
-        </div>
-
-        {moveHistory.length > 0 && (
-          <div className={[styles.moveHistory, showMoveHistory ? '' : styles.moveHistoryCollapsed].join(' ')}>
-            <div className={styles.moveHistoryHeader}>
-              <div>
-                <h3>Move History</h3>
-                <span className={styles.moveCount}>
-                  {moveHistory.length} {moveHistory.length === 1 ? 'move' : 'moves'}
-                </span>
+        <div className={styles.boardWrapper}>
+          {waitingForOpponent && (
+            <div className={styles.waitingOverlay} role="status" aria-live="polite">
+              <div className={styles.waitingMessage}>
+                <div>Waiting for an opponent to join…</div>
+                <div style={{ marginTop: 12 }}>
+                  <button onClick={handleLeaveRoom} className={styles.leaveButton} type="button">
+                    Cancel &amp; Leave
+                  </button>
+                </div>
               </div>
-              <button
-                className={styles.historyToggleButton}
-                onClick={() => setShowMoveHistory((current) => !current)}
-                type="button"
-                aria-expanded={showMoveHistory}
-              >
-                {showMoveHistory ? 'Hide' : 'Show'}
-              </button>
             </div>
+          )}
 
-            {showMoveHistory && (
-              <div className={styles.moveList}>
-                {moveHistory.map((move, index) => (
-                  <div key={`${move.from}-${move.to}-${index}`} className={styles.moveItem}>
-                    <span className={styles.moveNumber}>{index + 1}</span>
-                    <span className={styles.moveSan}>
-                      {getPlayerLabel(move.player)} {move.piece === 'king' ? 'Sdach' : 'Kon'}{' '}
-                      {move.from}-{move.to}
-                      {move.captures?.length
-                        ? ` x ${move.captures.map(getPieceRoleLabel).join(', ')}`
-                        : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
+          <div className={styles.board} role="grid" aria-label="Leung Rek board">
+            {board.map((row, rowIndex) =>
+              row.map((piece, colIndex) => {
+                const square = { row: rowIndex, col: colIndex };
+                const selected = isSameSquare(selectedSquare, square);
+                const called = isSameSquare(calledSquare, square);
+                const legal = legalMoves.some((move) => isSameSquare(move, square));
+                const capturable = legal && Boolean(piece && piece.player !== turn);
+
+                return (
+                  <button
+                    key={`${rowIndex}-${colIndex}`}
+                    className={[
+                      styles.square,
+                      (rowIndex + colIndex) % 2 === 0 ? styles.lightSquare : styles.darkSquare,
+                      selected ? styles.selectedSquare : '',
+                      called ? styles.calledSquare : '',
+                      legal ? styles.legalSquare : '',
+                      capturable ? styles.captureSquare : '',
+                    ].join(' ')}
+                    onClick={() => handleSquareClick(square)}
+                    type="button"
+                    role="gridcell"
+                    aria-label={squareName(square)}
+                  >
+                    {piece && (
+                      <span className={`${styles.piece} ${styles[piece.player]}`}>
+                        <span className={styles.pieceRole}>
+                          {piece.role === 'king' ? 'SD' : 'KON'}
+                        </span>
+                      </span>
+                    )}
+                  </button>
+                );
+              })
             )}
           </div>
+        </div>
+      </main>
+
+      {/* ================= GAME OVER OVERLAY ================= */}
+      {gameState === 'finished' && winner && (
+        <div className={styles.gameOverOverlay}>
+          <div className={styles.gameOverCard}>
+            <h2 className={styles.gameOverTitle}>Game Over</h2>
+            <p className={styles.gameOverSubtitle}>
+              {getPlayerLabel(winner)} captured the king and wins!
+            </p>
+            <div className={styles.gameOverActions}>
+              <button onClick={resetGame} className={`${styles.gameOverBtn} ${styles.gameOverBtnPrimary}`}>
+                🔄 Play Again
+              </button>
+              {onExit && (
+                <button onClick={onExit} className={`${styles.gameOverBtn} ${styles.gameOverBtnSecondary}`}>
+                  🏠 Home
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= BOTTOM LEFT: UNDO ================= */}
+      <div className={styles.bottomLeftCorner}>
+        <button
+          onClick={undoMove}
+          className={styles.iconCornerBtn}
+          disabled={moveHistory.length === 0}
+          title="Undo Move"
+        >
+          ↩
+        </button>
+      </div>
+
+      {/* ================= BOTTOM RIGHT: HOME ================= */}
+      <div className={styles.bottomRightCorner}>
+        {onExit && (
+          <button onClick={onExit} className={styles.iconCornerBtn} title="Return to Main Menu">
+            🏠
+          </button>
         )}
       </div>
+
+      {/* ================= RIGHT SIDEBAR ================= */}
+      <aside className={styles.rightSidebar}>
+        <div className={styles.sidebarSection}>
+          <span className={styles.sidebarLabel}>ROOM</span>
+          <div className={styles.roomTag}>{roomCode || 'LOCAL'}</div>
+
+          {roomCode && isOnline && (
+            <button
+              onClick={() => {
+                const invite = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+                navigator.clipboard.writeText(invite).then(() => setOnlineStatus('Link Copied!'));
+              }}
+              className={styles.sidebarActionBtn}
+            >
+              🔗 Copy
+            </button>
+          )}
+        </div>
+
+        <div className={styles.sidebarDivider}></div>
+
+        <button onClick={resetGame} className={styles.sidebarActionBtn}>
+          🔄 New
+        </button>
+
+        <div className={styles.sidebarDivider}></div>
+
+        {/* Move History in sidebar */}
+        <div className={styles.sidebarHistory}>
+          <div className={styles.historyTitle}>Moves ({moveHistory.length})</div>
+          <div className={styles.miniMoveList}>
+            {moveHistory.map((m, idx) => (
+              <div key={idx} className={styles.miniMoveRow}>
+                <span>{idx + 1}.</span>
+                <span>{m.from}→{m.to}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {onlineStatus && <div className={styles.sidebarStatusToast}>{onlineStatus}</div>}
+      </aside>
     </div>
   );
 }

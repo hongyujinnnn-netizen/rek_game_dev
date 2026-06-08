@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const room = url.searchParams.get('room');
 
-    const supabase = createClient(cookies());
+    const supabase = createClient(await cookies());
 
     if (room) {
       const { data, error } = await supabase.from('games').select('*').eq('room_code', room).maybeSingle();

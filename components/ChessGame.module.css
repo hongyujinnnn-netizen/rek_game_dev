@@ -1,167 +1,224 @@
-.container {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+/* ============================================================
+   ARENA WRAPPER — full-screen immersive game container
+   ============================================================ */
+.arenaWrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(ellipse at 50% 40%, #3d3a37 0%, #262421 60%, #1a1816 100%);
+  color: #e8e6e3;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Subtle texture overlay for premium feel */
+.arenaWrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(rgba(22, 28, 35, 0.64), rgba(22, 28, 35, 0.72)),
-    repeating-linear-gradient(45deg, #8a6a43 0 18px, #705132 18px 36px);
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+  pointer-events: none;
+  z-index: 0;
 }
 
-.gameInfo {
-  margin-bottom: 24px;
-  padding: 18px 32px;
+/* ============================================================
+   DIAGNOSTIC BANNER — Supabase key warning
+   ============================================================ */
+.diagnosticBanner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 16px;
+  background: rgba(183, 59, 51, 0.9);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
   text-align: center;
-  background: rgba(253, 250, 241, 0.96);
-  border: 1px solid rgba(66, 41, 24, 0.18);
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================
+   PLAYER CARDS — floating info modules, top corners
+   ============================================================ */
+.playerCard {
+  position: absolute;
+  top: 24px;
+  background: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 20px;
   border-radius: 8px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
-}
-
-.gameInfo h1 {
-  margin: 0 0 12px;
-  color: #251b14;
-  font-size: 2rem;
-  line-height: 1.1;
-}
-
-.status {
-  display: inline-block;
   min-width: 220px;
-  margin-bottom: 14px;
-  padding: 8px 14px;
-  color: #302419;
-  font-size: 1.05rem;
-  font-weight: 700;
-  background: #efe4cf;
-  border: 1px solid rgba(73, 50, 29, 0.18);
-  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  z-index: 10;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.buttonGroup {
+.topLeftPlayer {
+  left: 24px;
+}
+
+.topRightPlayer {
+  right: 104px; /* Leave space for sidebar */
+}
+
+/* Active turn glow effect */
+.activeTurn {
+  border-color: rgba(241, 196, 15, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(241, 196, 15, 0.1);
+}
+
+.profileHeader {
   display: flex;
-  justify-content: center;
+  align-items: center;
   gap: 10px;
 }
 
-.resetButton,
-.undoButton,
-.callButton {
-  min-width: 112px;
-  padding: 10px 14px;
-  color: #fff;
-  font-size: 0.95rem;
+.badge {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.redBadge {
+  background: #e74c3c;
+  box-shadow: 0 0 6px rgba(231, 76, 60, 0.5);
+}
+
+.blueBadge {
+  background: #3498db;
+  box-shadow: 0 0 6px rgba(52, 152, 219, 0.5);
+}
+
+.username {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #f0ece8;
+  letter-spacing: 0.01em;
+}
+
+.playerMeta {
+  font-size: 0.78rem;
+  color: #888;
+  font-weight: 500;
+}
+
+/* ============================================================
+   CHESS CLOCK — stylized digital timer
+   ============================================================ */
+.chessClock {
+  background: #111;
+  color: #666;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 1.35rem;
   font-weight: 700;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
-
-.resetButton {
-  background: #247a5a;
-}
-
-.undoButton {
-  background: #9a5b20;
-}
-
-.callButton {
-  background: #3e6f6b;
-}
-
-.resetButton:hover,
-.undoButton:hover:not(:disabled),
-.callButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
-}
-
-.undoButton:disabled {
-  color: #715f50;
-  background: #d8c8b4;
-  cursor: not-allowed;
-}
-
-.boardWrapper {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 24px;
-  width: 100%;
-  flex-wrap: wrap;
-
-  position: relative;
-}
-
-.waitingOverlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 10, 10, 0.45);
-  z-index: 40;
-  pointer-events: auto;
-}
-
-.waitingMessage {
-  background: rgba(253, 250, 241, 0.98);
-  color: #231915;
-  padding: 18px 22px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.28);
-  text-align: center;
-  font-weight: 700;
-}
-
-.leaveButton {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: #b73b33;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.copyButton {
-  margin-left: 8px;
   padding: 6px 10px;
-  background: #315d59;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 700;
+  text-align: center;
+  border-radius: 4px;
+  border-left: 4px solid #333;
+  letter-spacing: 0.08em;
+  transition: all 0.3s ease;
 }
 
-.copyButton:hover { background: #254b48; }
+/* Glowing alert state when call window is active */
+.clockAlert {
+  background: rgba(80, 72, 24, 0.9);
+  color: #f1c40f;
+  border-left-color: #f1c40f;
+  animation: clockPulse 1.5s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(241, 196, 15, 0.4);
+}
 
-.diagnosticBanner {
-  width: 100%;
-  padding: 10px 14px;
-  background: #fbe4e2;
-  color: #7a261f;
-  border: 1px solid rgba(123, 40, 28, 0.12);
-  border-radius: 6px;
-  text-align: center;
+/* Inline call button inside player card */
+.inlineCallBtn {
+  padding: 6px 12px;
+  background: rgba(241, 196, 15, 0.15);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  color: #f1c40f;
+  font-size: 0.82rem;
   font-weight: 700;
-  margin-bottom: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inlineCallBtn:hover {
+  background: rgba(241, 196, 15, 0.25);
+  border-color: rgba(241, 196, 15, 0.5);
+}
+
+/* ============================================================
+   CENTER STAGE — board centering container
+   ============================================================ */
+.centerStage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-right: 80px; /* Counter-balance right sidebar */
+  z-index: 1;
+}
+
+/* Forced move alert banner */
+.matchAlertBanner {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(calc(-50% - 40px)); /* Offset for sidebar */
+  padding: 10px 24px;
+  background: rgba(183, 59, 51, 0.85);
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  z-index: 15;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  animation: slideDown 0.3s ease-out;
+}
+
+/* ============================================================
+   GAME BOARD
+   ============================================================ */
+.boardWrapper {
+  position: relative;
 }
 
 .board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  width: min(640px, calc(100vw - 48px));
+  width: min(540px, calc(100vh - 200px), calc(100vw - 200px));
   aspect-ratio: 1;
   overflow: hidden;
   background: #2b1d13;
-  border: 10px solid #332217;
-  border-radius: 8px;
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.34);
+  border: 6px solid rgba(50, 40, 30, 0.9);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    0 0 80px rgba(0, 0, 0, 0.2);
 }
 
 .square {
@@ -173,6 +230,11 @@
   aspect-ratio: 1;
   border: 0;
   cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.square:hover {
+  filter: brightness(1.1);
 }
 
 .square:focus-visible {
@@ -189,194 +251,541 @@
   background: #9b714c;
 }
 
+/* Square state overlays */
 .selectedSquare::after,
 .legalSquare::after,
 .captureSquare::after {
   position: absolute;
-  inset: 8px;
+  inset: 6px;
   content: '';
-  border-radius: 5px;
+  border-radius: 4px;
   pointer-events: none;
+  z-index: 2;
 }
 
 .selectedSquare::after {
-  border: 4px solid #f5d45c;
+  border: 3px solid #f5d45c;
+  box-shadow: inset 0 0 12px rgba(245, 212, 92, 0.2);
 }
 
 .legalSquare::after {
-  background: rgba(36, 122, 90, 0.28);
+  background: rgba(36, 122, 90, 0.3);
+  border-radius: 50%;
+  inset: 30%;
 }
 
 .captureSquare::after {
-  background: rgba(175, 44, 44, 0.32);
-  border: 3px solid rgba(175, 44, 44, 0.72);
+  background: rgba(175, 44, 44, 0.25);
+  border: 3px solid rgba(175, 44, 44, 0.65);
 }
 
 .calledSquare::after {
   position: absolute;
   inset: 0;
   content: '';
-  border: 4px solid #f1c40f;
-  background: rgba(241, 196, 15, 0.15);
+  border: 3px solid #f1c40f;
+  background: rgba(241, 196, 15, 0.12);
   pointer-events: none;
+  z-index: 2;
+  animation: calledPulse 2s ease-in-out infinite;
 }
 
+/* ============================================================
+   GAME PIECES
+   ============================================================ */
 .piece {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 70%;
+  width: 72%;
   aspect-ratio: 1;
   color: #fff;
   border-radius: 50%;
-  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.18), 0 8px 14px rgba(0, 0, 0, 0.28);
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.square:hover .piece {
+  transform: scale(1.05);
 }
 
 .pieceRole {
-  font-size: clamp(0.62rem, 2.2vw, 1rem);
+  font-size: clamp(0.58rem, 2vw, 0.92rem);
   font-weight: 800;
-  letter-spacing: 0;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .red {
-  background: #b73b33;
-  border: 3px solid #f1b2a3;
+  background: linear-gradient(145deg, #c94038, #a82e27);
+  border: 2px solid rgba(241, 178, 163, 0.6);
 }
 
 .blue {
-  background: #1d5f90;
-  border: 3px solid #9bc7e7;
+  background: linear-gradient(145deg, #2878b5, #1a5a8a);
+  border: 2px solid rgba(155, 199, 231, 0.6);
 }
 
-.moveHistory {
-  width: min(320px, calc(100vw - 48px));
-  max-height: 640px;
-  overflow-y: auto;
-  padding: 16px;
-  color: #261b13;
-  background: rgba(253, 250, 241, 0.96);
-  border: 1px solid rgba(66, 41, 24, 0.18);
-  border-radius: 8px;
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
-}
-
-.moveHistoryCollapsed {
-  max-height: none;
-  overflow: visible;
-}
-
-.moveHistoryHeader {
+/* ============================================================
+   WAITING OVERLAY
+   ============================================================ */
+.waitingOverlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid rgba(66, 41, 24, 0.18);
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.6);
+  z-index: 40;
+  pointer-events: auto;
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
 }
 
-.moveHistoryCollapsed .moveHistoryHeader {
-  padding-bottom: 0;
-  margin-bottom: 0;
-  border-bottom: 0;
+.waitingMessage {
+  background: rgba(30, 30, 30, 0.95);
+  color: #e8e6e3;
+  padding: 24px 32px;
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.moveHistory h3 {
-  margin: 0;
-  color: #251b14;
-  font-size: 1rem;
+.leaveButton {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: rgba(183, 59, 51, 0.8);
+  color: white;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.leaveButton:hover {
+  background: rgba(183, 59, 51, 1);
+}
+
+/* ============================================================
+   CORNER BUTTONS — undo (bottom-left), home (bottom-right)
+   ============================================================ */
+.bottomLeftCorner {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 10;
+}
+
+.bottomRightCorner {
+  position: absolute;
+  bottom: 24px;
+  right: 104px; /* Clear the sidebar */
+  z-index: 10;
+}
+
+.iconCornerBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ccc;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.iconCornerBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.iconCornerBtn:disabled {
+  color: #555;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.iconCornerBtn:disabled:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: none;
+  box-shadow: none;
+}
+
+/* ============================================================
+   RIGHT SIDEBAR — admin panel, room info, history
+   ============================================================ */
+.rightSidebar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  background: rgba(26, 26, 26, 0.95);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 8px;
+  gap: 16px;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+}
+
+.sidebarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.sidebarLabel {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.roomTag {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #aaa;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 3px 6px;
+  border-radius: 3px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.sidebarActionBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 56px;
+  min-height: 48px;
+  padding: 8px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #aaa;
+  font-size: 0.62rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
   line-height: 1.2;
 }
 
-.moveCount {
-  display: block;
-  margin-top: 3px;
-  color: #705132;
-  font-size: 0.82rem;
-  font-weight: 700;
+.sidebarActionBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.historyToggleButton {
-  flex: 0 0 auto;
-  min-width: 68px;
-  padding: 8px 12px;
-  color: #fff;
-  font-size: 0.84rem;
-  font-weight: 800;
-  background: #3e6f6b;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+/* Sidebar separator */
+.sidebarDivider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.historyToggleButton:hover {
-  background: #315d59;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-}
-
-.historyToggleButton:focus-visible {
-  outline: 3px solid #f7d26b;
-  outline-offset: 2px;
-}
-
-.moveList {
+/* History panel in sidebar */
+.sidebarHistory {
+  flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  overflow: hidden;
+  min-height: 0;
 }
 
-.moveItem {
-  display: grid;
-  grid-template-columns: 32px 1fr;
-  gap: 10px;
-  align-items: center;
-  padding: 8px;
-  background: #f1e6d4;
+.historyTitle {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.miniMoveList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.miniMoveList::-webkit-scrollbar {
+  width: 3px;
+}
+
+.miniMoveList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.miniMoveRow {
+  display: flex;
+  gap: 3px;
+  font-size: 0.58rem;
+  font-family: ui-monospace, monospace;
+  color: #888;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.miniMoveRow:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Status toast at sidebar bottom */
+.sidebarStatusToast {
+  position: absolute;
+  bottom: 10px;
+  left: -160px;
+  width: 150px;
+  padding: 8px 10px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #aaa;
+  font-size: 0.72rem;
+  font-weight: 600;
   border-radius: 6px;
+  text-align: center;
+  animation: toastIn 0.3s ease-out;
+  z-index: 30;
+  pointer-events: none;
 }
 
-.moveNumber {
-  color: #705132;
+/* ============================================================
+   GAME OVER OVERLAY
+   ============================================================ */
+.gameOverOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 30;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.4s ease-out;
+}
+
+.gameOverCard {
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 32px 48px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.4s ease-out;
+}
+
+.gameOverTitle {
+  font-size: 1.8rem;
   font-weight: 800;
+  margin: 0 0 8px;
+  background: linear-gradient(135deg, #f1c40f, #e67e22);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.moveSan {
-  color: #251b14;
-  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
-  font-size: 0.88rem;
-  line-height: 1.35;
+.gameOverSubtitle {
+  font-size: 1rem;
+  color: #888;
+  margin: 0 0 24px;
+  font-weight: 500;
 }
 
-@media (max-width: 720px) {
-  .container {
-    justify-content: flex-start;
-    padding: 16px;
+.gameOverActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.gameOverBtn {
+  padding: 10px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gameOverBtnPrimary {
+  background: rgba(241, 196, 15, 0.15);
+  color: #f1c40f;
+  border-color: rgba(241, 196, 15, 0.3);
+}
+
+.gameOverBtnPrimary:hover {
+  background: rgba(241, 196, 15, 0.25);
+}
+
+.gameOverBtnSecondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+}
+
+.gameOverBtnSecondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ddd;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes clockPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes calledPulse {
+  0%, 100% { border-color: #f1c40f; }
+  50% { border-color: rgba(241, 196, 15, 0.5); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(calc(-50% - 40px)) translateY(-10px); }
+  to { opacity: 1; transform: translateX(calc(-50% - 40px)) translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile / Tablet
+   ============================================================ */
+@media (max-width: 768px) {
+  .arenaWrapper {
+    overflow-y: auto;
   }
 
-  .gameInfo {
-    width: 100%;
-    padding: 16px;
-  }
-
-  .gameInfo h1 {
-    font-size: 1.55rem;
-  }
-
-  .status {
-    width: 100%;
+  .playerCard {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
     min-width: 0;
+    width: 100%;
   }
 
-  .buttonGroup {
-    flex-wrap: wrap;
+  .topLeftPlayer,
+  .topRightPlayer {
+    left: auto;
+    right: auto;
+  }
+
+  .centerStage {
+    padding-right: 0;
+    padding-top: 8px;
+    padding-bottom: 80px;
+    min-height: auto;
+    height: auto;
+  }
+
+  .rightSidebar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 56px;
+    flex-direction: row;
+    padding: 8px 16px;
+    gap: 12px;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .sidebarHistory {
+    display: none;
+  }
+
+  .bottomLeftCorner {
+    bottom: 68px;
+    left: 12px;
+  }
+
+  .bottomRightCorner {
+    bottom: 68px;
+    right: 12px;
   }
 
   .board {
-    width: min(100%, calc(100vw - 32px));
-    border-width: 6px;
+    width: min(100%, calc(100vw - 24px));
+    border-width: 4px;
+  }
+
+  .matchAlertBanner {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+  }
+
+  .topRightPlayer {
+    right: auto;
+  }
+
+  .gameOverCard {
+    padding: 24px;
+    margin: 16px;
+  }
+}
+
+/* Stack the mobile layout properly */
+@media (max-width: 768px) {
+  .arenaWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    gap: 8px;
+    height: auto;
+    min-height: 100vh;
   }
 }

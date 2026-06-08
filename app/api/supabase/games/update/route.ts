@@ -11,7 +11,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'room_code and updates required' }, { status: 400 });
     }
 
-    const supabase = createClient(cookies());
+    const supabase = createClient(await cookies());
 
     const { data, error } = await supabase
       .from('games')

@@ -10,6 +10,7 @@ create table if not exists public.games (
   player_id_red text,
   player_id_blue text,
   called_square jsonb,
+  call_timer integer,
   move_history jsonb,
   winner text,
   updated_at timestamptz default now()
