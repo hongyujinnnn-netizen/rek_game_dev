@@ -1,82 +1,109 @@
-/* components/Navbar.module.css */
+/* components/Navbar.module.css — Cinematic Dark Mode */
 .navbar {
-  position: sticky;
+  position: absolute;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
-  backdrop-filter: blur(16px);
-  background: rgba(15, 23, 42, 0.7);
-  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-  transition: all 0.2s ease;
-}
-
-.scrolled {
-  background: rgba(2, 6, 23, 0.85);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 16px 32px;
+  padding: 30px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.scrolled {
+  position: fixed;
+  background: rgba(10, 12, 16, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 20px 40px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #f0f9ff, #5eead4);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  gap: 8px;
   text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.logo:hover {
+  opacity: 0.8;
 }
 
 .logoIcon {
-  font-size: 1.8rem;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: white;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logoText {
+  font-family: 'Oswald', 'Inter', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.logoAccent {
+  color: #FFB300;
 }
 
 .links {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 40px;
 }
 
 .navLink {
-  color: #cbd5e6;
+  color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  position: relative;
+  padding-bottom: 4px;
+  transition: color 0.3s ease;
+}
+
+.navLink::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #FFB300;
+  border-radius: 2px;
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .navLink:hover {
-  color: #2dd4bf;
+  color: white;
 }
 
-.userBadge {
-  background: rgba(45, 212, 191, 0.15);
-  padding: 6px 14px;
-  border-radius: 40px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #a5f3fc;
-  border: 1px solid rgba(45,212,191,0.3);
+.navLink:hover::after {
+  width: 100%;
 }
 
-@media (max-width: 640px) {
-  .container {
-    padding: 12px 20px;
+@media (max-width: 768px) {
+  .navbar {
+    padding: 20px;
   }
-  .logo {
-    font-size: 1.2rem;
+  .scrolled {
+    padding: 15px 20px;
   }
   .links {
-    gap: 16px;
+    gap: 20px;
+  }
+  .navLink {
+    font-size: 0.85rem;
   }
 }

@@ -1,446 +1,294 @@
-/* LeungRekHome.module.css - Modern Glassmorphism Redesign */
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap');
+/* LeungRekHome.module.css - Cinematic Dark Redesign */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600&display=swap');
 
 .shell {
-  /* Font & base reset */
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #f1f5f9;
-  
-  /* Modern layout */
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
   min-height: 100vh;
-  gap: 28px;
-  padding: 32px;
+  background-color: #050608;
+  background-image: url('/hero-knights.png');
+  background-size: cover;
+  background-position: right center;
+  background-repeat: no-repeat;
   position: relative;
-  isolation: isolate;
-  
-  /* Animated gradient background */
-  background: radial-gradient(circle at 20% 30%, #0a0f1e, #030614);
-  overflow-x: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 10%;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
 }
 
-/* Animated floating orbs (modern background effect) */
+/* Add a dark gradient overlay on mobile or to ensure text readability */
 .shell::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 70% 10%, rgba(56, 189, 248, 0.15), transparent 50%),
-              radial-gradient(circle at 20% 90%, rgba(16, 185, 129, 0.12), transparent 55%);
+  background: linear-gradient(90deg, rgba(5, 6, 8, 1) 0%, rgba(5, 6, 8, 0.7) 40%, rgba(5, 6, 8, 0) 100%);
   pointer-events: none;
-  z-index: -2;
 }
 
-.shell::after {
-  content: '';
-  position: absolute;
-  top: -30%;
-  left: -20%;
-  width: 120%;
-  height: 120%;
-  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 12px);
-  pointer-events: none;
-  z-index: -1;
-  animation: subtleShift 30s linear infinite;
-}
-
-@keyframes subtleShift {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  100% { transform: translate(2%, 1%) rotate(0.5deg); }
-}
-
-/* Glassmorphic panel base */
-.playPanel,
-.accountPanel {
-  background: rgba(15, 23, 42, 0.68);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.18);
-  border-radius: 32px;
-  box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-  transition: transform 0.2s ease, border-color 0.2s;
-}
-
-.playPanel {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 28px;
-  padding: 44px 40px;
-}
-
-/* Brand section with gradient text */
-.brandBlock {
-  max-width: 680px;
-}
-
-.kicker {
-  margin: 0 0 12px;
-  background: linear-gradient(135deg, #38bdf8, #2dd4bf);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  display: inline-block;
-}
-
-.brandBlock h1 {
-  margin: 0;
-  font-size: clamp(3rem, 8vw, 5.8rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #f0f9ff, #a5f3fc, #5eead4);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  line-height: 1.1;
-  text-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.summary {
-  max-width: 560px;
-  margin: 20px 0 0;
-  color: #cbd5e6;
-  font-size: 1.08rem;
-  line-height: 1.5;
-  font-weight: 400;
-  backdrop-filter: blur(4px);
-}
-
-/* Mode cards grid */
-.modeGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin: 12px 0 8px;
-}
-
-.modeCard {
-  min-height: 160px;
-  padding: 22px 20px;
-  text-align: left;
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 28px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+.heroContent {
   position: relative;
-  overflow: hidden;
+  z-index: 10;
+  max-width: 600px;
+  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.modeCard::after {
-  content: '';
-  position: absolute;
+.heroTitle {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(4rem, 8vw, 7rem);
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.heroDivider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0;
+}
+
+.heroDividerLine {
+  height: 2px;
+  width: 40px;
+  background-color: #FFB300;
+}
+
+.heroDividerDot {
+  width: 6px;
+  height: 6px;
+  background-color: #FFB300;
+  border-radius: 50%;
+  margin-left: -3px;
+}
+
+.heroSubtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin: 0 0 40px 0;
+  letter-spacing: 0.5px;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.btnPrimary {
+  background-color: #FFB300;
+  color: #050608;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnPrimary:hover {
+  background-color: #FFC933;
+  transform: translateY(-2px);
+}
+
+.btnSecondary {
+  background: transparent;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  padding: 0;
+}
+
+.btnSecondary:hover {
+  opacity: 0.8;
+}
+
+.playIcon {
+  width: 12px;
+  height: 12px;
+  fill: #FFB300;
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.12), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease forwards;
 }
 
-.modeCard:hover::after {
-  opacity: 1;
+.modalContent {
+  background: rgba(15, 17, 21, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  padding: 40px;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.modeCard:hover,
-.modeCard:focus-visible {
-  border-color: #2dd4bf;
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(45, 212, 191, 0.3);
-  background: rgba(30, 41, 59, 0.7);
-  outline: none;
+.modalClose {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modalClose:hover {
+  color: white;
+}
+
+.modalTitle {
+  color: white;
+  font-family: 'Oswald', sans-serif;
+  font-size: 2rem;
+  margin: 0 0 24px 0;
+  letter-spacing: 1px;
+}
+
+/* Modal specific content styles mapped from original */
+.modeCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.modeCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 179, 0, 0.3);
 }
 
 .modeTitle {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
   display: block;
-  color: #e2e8f0;
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .modeText {
-  display: block;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 0.9rem;
-  line-height: 1.45;
-  font-weight: 400;
 }
 
-/* Room join - modern compact glass */
 .roomJoin {
-  padding: 22px 24px;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 28px;
-  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
 }
 
-.roomJoin label,
-.authForm label {
-  display: grid;
-  gap: 10px;
-  color: #cbd5e1;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+.roomJoin label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
 }
 
 .joinControls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  margin-top: 14px;
+  display: flex;
+  gap: 12px;
 }
 
-.joinControls input,
-.authForm input {
-  min-width: 0;
-  padding: 14px 16px;
-  color: #f1f5f9;
-  font: inherit;
-  font-weight: 500;
-  background: rgba(2, 6, 23, 0.7);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-radius: 20px;
-  transition: all 0.2s;
-  backdrop-filter: blur(4px);
-}
-
-.joinControls input:focus,
-.authForm input:focus {
+.joinControls input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
   outline: none;
-  border-color: #2dd4bf;
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
-  background: rgba(2, 6, 23, 0.9);
+  transition: border-color 0.3s;
 }
 
-.joinControls button,
-.authForm > button,
-.secondaryButton {
-  padding: 12px 20px;
-  color: #ffffff;
-  font-weight: 700;
-  background: linear-gradient(105deg, #0f766e, #0d9488);
+.joinControls input:focus {
+  border-color: #FFB300;
+}
+
+.joinControls button {
+  background: #FFB300;
+  color: #050608;
   border: none;
-  border-radius: 40px;
+  padding: 0 24px;
+  border-radius: 4px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-  letter-spacing: 0.2px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s;
 }
 
-.joinControls button:hover,
-.authForm > button:hover:not(:disabled),
-.secondaryButton:hover:not(:disabled) {
-  background: linear-gradient(105deg, #0d9488, #0f766e);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(13, 148, 136, 0.35);
+.joinControls button:hover:not(:disabled) {
+  background: #FFC933;
 }
 
-.joinControls button:disabled,
-.authForm > button:disabled,
-.secondaryButton:disabled {
-  background: #334155;
-  color: #94a3b8;
+.joinControls button:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* Account panel specific modern touches */
-.accountPanel {
-  align-self: stretch;
-  padding: 28px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.accountHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.accountHeader h2 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #e2e8f0, #b9e6f0);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.accountHeader span {
-  padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.2);
-  backdrop-filter: blur(4px);
-  border-radius: 40px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #5eead4;
-  border: 0.5px solid rgba(94, 234, 212, 0.3);
-}
-
-/* Auth tabs modern */
-.authTabs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  background: rgba(2, 6, 23, 0.5);
-  padding: 5px;
-  border-radius: 48px;
-  margin-bottom: 10px;
-}
-
-.authTabs button {
-  padding: 10px 12px;
-  color: #cbd5e6;
-  font-weight: 600;
-  background: transparent;
-  border: none;
-  border-radius: 40px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-}
-
-.authTabs .activeTab {
-  color: #0f172a;
-  background: #2dd4bf;
-  box-shadow: 0 2px 8px rgba(45, 212, 191, 0.3);
-}
-
-/* profile card */
-.profileCard {
-  display: grid;
-  gap: 20px;
-  padding: 20px;
-  background: rgba(15, 23, 42, 0.5);
-  border-radius: 28px;
-  border: 1px solid rgba(56, 189, 248, 0.15);
-}
-
-.profileName {
-  margin: 0;
-  font-size: 1.55rem;
-  font-weight: 700;
-  background: linear-gradient(145deg, #fff, #a5f3fc);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-.profileEmail {
-  margin: 5px 0 0;
-  color: #94a3b8;
-  font-size: 0.85rem;
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  margin: 8px 0;
-}
-
-.statsGrid span {
-  padding: 16px 12px;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  border-radius: 24px;
-  text-align: center;
-  color: #cbd5e1;
-  font-weight: 500;
-  border: 1px solid rgba(45, 212, 191, 0.2);
-}
-
-.statsGrid strong {
-  display: block;
-  color: #2dd4bf;
-  font-size: 2rem;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.secondaryButton {
-  background: linear-gradient(105deg, #4b5563, #374151);
-}
-
-.authMessage {
-  margin: 16px 0 0;
-  padding: 12px 18px;
-  color: #facc15;
-  font-size: 0.85rem;
-  font-weight: 500;
-  background: rgba(250, 204, 21, 0.1);
-  border-left: 3px solid #facc15;
-  border-radius: 20px;
-  backdrop-filter: blur(4px);
-}
-
-/* Custom responsive */
-@media (max-width: 1000px) {
+@media (max-width: 1024px) {
   .shell {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    padding: 20px;
-  }
-  .playPanel {
-    padding: 32px 28px;
+    padding: 0 5%;
+    background-position: 70% center;
   }
 }
 
-@media (max-width: 640px) {
-  .modeGrid,
-  .joinControls {
-    grid-template-columns: 1fr;
+@media (max-width: 768px) {
+  .shell::before {
+    background: linear-gradient(0deg, rgba(5, 6, 8, 1) 0%, rgba(5, 6, 8, 0.8) 50%, rgba(5, 6, 8, 0) 100%);
   }
-  .playPanel {
-    padding: 24px 20px;
+  .shell {
+    align-items: flex-end;
+    padding-bottom: 100px;
+    background-position: 60% center;
   }
-  .accountPanel {
-    padding: 20px;
-  }
-  .modeCard {
-    min-height: 130px;
-  }
-  .brandBlock h1 {
-    font-size: clamp(2.5rem, 12vw, 4rem);
+  .heroTitle {
+    font-size: 3.5rem;
   }
 }
-
-/* Additional modern microinteractions */
-@keyframes fadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.playPanel > *,
-.accountPanel > * {
-  animation: fadeSlideUp 0.4s ease backwards;
-}
-
-.playPanel > *:nth-child(1) { animation-delay: 0.05s; }
-.playPanel > *:nth-child(2) { animation-delay: 0.1s; }
-.playPanel > *:nth-child(3) { animation-delay: 0.15s; }
-.accountPanel > *:nth-child(1) { animation-delay: 0.05s; }
-.accountPanel > *:nth-child(2) { animation-delay: 0.1s; }

@@ -1,14 +1,13 @@
-/* components/Footer.module.css */
+/* components/Footer.module.css — Light-mode premium minimal */
 .footer {
   margin-top: 60px;
-  background: rgba(2, 6, 23, 0.6);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(56, 189, 248, 0.15);
+  background: rgba(248, 250, 252, 0.8);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
   padding: 32px 0;
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 32px;
   display: flex;
@@ -26,15 +25,13 @@
 
 .footerLogo {
   font-weight: 700;
-  font-size: 1.2rem;
-  background: linear-gradient(135deg, #e2e8f0, #94a3b8);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  font-size: 1.15rem;
+  color: #0f172a;
+  letter-spacing: -0.01em;
 }
 
 .copyright {
-  color: #7e8aa2;
+  color: #94a3b8;
   font-size: 0.8rem;
   margin: 0;
 }
@@ -45,14 +42,16 @@
 }
 
 .link {
-  color: #9ca3af;
+  color: #64748b;
   text-decoration: none;
   font-size: 0.9rem;
-  transition: color 0.2s;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  letter-spacing: 0.01em;
 }
 
 .link:hover {
-  color: #2dd4bf;
+  color: #0f172a;
 }
 
 @media (max-width: 640px) {

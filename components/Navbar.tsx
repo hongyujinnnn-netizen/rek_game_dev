@@ -30,19 +30,26 @@ export default function Navbar() {
 
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
-      <div className={styles.container}>
-        <Link href="/" className={styles.logo}>
-          <span className={styles.logoIcon}>♞</span> Leung Rek
-        </Link>
-        <div className={styles.links}>
-          <Link href="/" className={styles.navLink}>Play</Link>
-          <Link href="/profile" className={styles.navLink}>Profile</Link>
-          {session && (
-            <span className={styles.userBadge}>
-              {session.name}
-            </span>
-          )}
-        </div>
+      <Link href="/" className={styles.logo}>
+        <svg className={styles.logoIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 20H22V22H2V20ZM2 18L4.5 5L9 11L12 2L15 11L19.5 5L22 18H2Z" fill="currentColor" stroke="none" />
+        </svg>
+        <span className={styles.logoText}>LEUNG<span className={styles.logoAccent}>REK</span></span>
+      </Link>
+      
+      <div className={styles.links}>
+        <Link href="/" className={styles.navLink}>Play</Link>
+        <Link href="/profile" className={styles.navLink}>Profile</Link>
+        <Link href="#" className={styles.navLink}>About</Link>
+        {session ? (
+          <span className={styles.navLink} style={{ color: '#FFB300', fontWeight: 600 }}>
+            {session.name}
+          </span>
+        ) : (
+          <Link href="/portal" className={styles.navLink}>
+            Sign In
+          </Link>
+        )}
       </div>
     </nav>
   );

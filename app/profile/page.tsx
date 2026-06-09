@@ -26,7 +26,7 @@ export default function ProfilePage() {
       .then(res => res.json())
       .then(payload => {
         if (!payload.session) {
-          router.push('/'); // redirect if not logged in
+          router.push('/portal'); // redirect if not logged in
           return;
         }
         setSession(payload.session);
@@ -38,7 +38,7 @@ export default function ProfilePage() {
         setLoading(false);
       })
       .catch(() => {
-        router.push('/');
+        router.push('/portal');
       });
   }, [router]);
 
