@@ -6,6 +6,7 @@ create table profiles (
   display_name text not null,
   wins integer default 0 not null,
   losses integer default 0 not null,
+  role text default 'player' not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -31,8 +32,8 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, display_name)
-  values (new.id, coalesce(new.raw_user_meta_data->>'display_name', new.email));
+  insert into public.profiles (id, display_name, role)
+  values (new.id, coalesce(new.raw_user_meta_data->>'display_name', new.email), coalesce(new.raw_user_meta_data->>'role', 'player'));
   return new;
 end;
 $$;

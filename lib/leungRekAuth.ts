@@ -28,6 +28,7 @@ export type PlayerSession = {
   name: string;
   wins: number | null;
   losses: number | null;
+  role: string;
 };
 
 function getSupabaseConfig() {
@@ -90,7 +91,7 @@ async function readPlayerProfile(accessToken: string, user: SupabaseUser): Promi
   }
 
   const response = await fetch(
-    `${config.url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=display_name,wins,losses&limit=1`,
+    `${config.url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=display_name,wins,losses,role&limit=1`,
     {
       headers: {
         apikey: config.anonKey,
@@ -107,6 +108,7 @@ async function readPlayerProfile(accessToken: string, user: SupabaseUser): Promi
       name: fallbackName,
       wins: null,
       losses: null,
+      role: 'player',
     };
   }
 
@@ -114,6 +116,7 @@ async function readPlayerProfile(accessToken: string, user: SupabaseUser): Promi
     display_name?: string | null;
     wins?: number | null;
     losses?: number | null;
+    role?: string | null;
   }>;
 
   return {
@@ -122,6 +125,7 @@ async function readPlayerProfile(accessToken: string, user: SupabaseUser): Promi
     name: profile?.display_name ?? fallbackName,
     wins: profile?.wins ?? null,
     losses: profile?.losses ?? null,
+    role: profile?.role ?? 'player',
   };
 }
 

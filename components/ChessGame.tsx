@@ -31,6 +31,7 @@ export type ChessGameProps = {
   isOnline?: boolean;
   roomCode?: string | null;
   playerName?: string | null;
+  playerId?: string | null;
   onExit?: () => void;
 };
 
@@ -261,6 +262,7 @@ export default function ChessGame({
   isOnline = false,
   roomCode = null,
   playerName = null,
+  playerId = null,
   onExit,
 }: ChessGameProps) {
   const [board, setBoard] = useState<RekBoard>(() => createInitialBoard());
@@ -277,9 +279,10 @@ export default function ChessGame({
   const [waitingForOpponent, setWaitingForOpponent] = useState<boolean>(false);
   const [realtimeActive, setRealtimeActive] = useState(false);
   const channelRef = useRef<any>(null);
-  const [clientPlayerId] = useState(() =>
-    playerName ? `user:${playerName}` : `guest-${Math.random().toString(36).slice(2, 10)}`
-  );
+  const [clientPlayerId] = useState(() => {
+    if (playerId) return playerId;
+    return playerName ? `user:${playerName}` : `guest-${Math.random().toString(36).slice(2, 10)}`;
+  });
 
   const legalMoves = useMemo(
     () => (callTimer === null ? getLegalMoves(board, selectedSquare, turn, calledSquare) : []),
@@ -371,6 +374,16 @@ export default function ChessGame({
 
     return () => window.clearTimeout(timeoutId);
   }, [callTimer, turn, isOnline, roomCode, board, moveHistory]);
+
+  useEffect(() => {
+    if (gameState === 'finished' && isOnline && roomCode) {
+      fetch('/api/supabase/stats/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_code: roomCode })
+      }).catch(err => console.error('Failed to record stats', err));
+    }
+  }, [gameState, isOnline, roomCode]);
 
   useEffect(() => {
     if (!isOnline || !roomCode) {

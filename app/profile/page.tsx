@@ -30,12 +30,15 @@ export default function ProfilePage() {
           return;
         }
         setSession(payload.session);
-        // Simulate fetch recent matches (replace with your actual API)
-        setRecentMatches([
-          { id: 1, opponent: 'player123', result: 'win', date: '2025-05-20' },
-          { id: 2, opponent: 'grandmaster', result: 'loss', date: '2025-05-18' },
-        ]);
-        setLoading(false);
+        fetch('/api/supabase/stats/matches')
+          .then(res => res.json())
+          .then(matches => {
+            if (Array.isArray(matches)) {
+              setRecentMatches(matches);
+            }
+            setLoading(false);
+          })
+          .catch(() => setLoading(false));
       })
       .catch(() => {
         router.push('/portal');
@@ -96,11 +99,13 @@ export default function ProfilePage() {
               {recentMatches.length > 0 ? (
                 recentMatches.map(match => (
                   <div key={match.id} className={styles.matchItem}>
-                    <span>vs {match.opponent}</span>
+                    <span>vs {match.opponent_name}</span>
                     <span className={match.result === 'win' ? styles.winBadge : styles.lossBadge}>
                       {match.result.toUpperCase()}
                     </span>
-                    <span className={styles.matchDate}>{match.date}</span>
+                    <span className={styles.matchDate}>
+                      {new Date(match.created_at).toLocaleDateString()}
+                    </span>
                   </div>
                 ))
               ) : (

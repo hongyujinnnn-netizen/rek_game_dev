@@ -59,6 +59,7 @@ export default function LeungRekHome() {
         isOnline={gameConfig.isOnline}
         roomCode={gameConfig.roomCode}
         playerName={session?.name ?? null}
+        playerId={session?.id ?? null}
         onExit={() => setGameConfig(null)}
       />
     );
