@@ -26,7 +26,7 @@ create policy "Users can update own profile."
   using ( auth.uid() = id );
 
 -- This trigger automatically creates a profile entry when a new user signs up via Supabase Auth.
-create function public.handle_new_user()
+create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer set search_path = public
@@ -38,16 +38,24 @@ begin
 end;
 $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Create a table for recent matches
+-- Create a table for recent matches (Redesigned)
+drop table if exists public.matches;
+
 create table matches (
   id uuid default uuid_generate_v4() primary key,
-  player_id uuid references public.profiles(id) not null,
-  opponent_name text not null,
-  result text check (result in ('win', 'loss', 'draw')) not null,
+  room_code text unique not null,
+  player_red_id text,
+  player_blue_id text,
+  player_red_name text,
+  player_blue_name text,
+  winner text check (winner in ('red', 'blue', 'draw')),
+  red_stats_recorded boolean default false,
+  blue_stats_recorded boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -57,6 +65,10 @@ create policy "Matches are viewable by everyone."
   on matches for select
   using ( true );
 
-create policy "Users can insert their own matches."
+create policy "Users can insert matches."
   on matches for insert
-  with check ( auth.uid() = player_id );
+  with check ( auth.uid()::text = player_red_id OR auth.uid()::text = player_blue_id );
+
+create policy "Users can update matches."
+  on matches for update
+  using ( auth.uid()::text = player_red_id OR auth.uid()::text = player_blue_id );

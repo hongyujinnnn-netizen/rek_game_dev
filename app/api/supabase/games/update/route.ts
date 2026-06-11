@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@/util/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export async function PATCH(request: Request) {
   try {
@@ -11,7 +11,20 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'room_code and updates required' }, { status: 400 });
     }
 
-    const supabase = createClient(await cookies());
+    const cookieStore = await cookies();
+    const token = cookieStore.get('leung_rek_access_token')?.value;
+
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!,
+      token ? {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      } : {}
+    );
 
     const { data, error } = await supabase
       .from('games')

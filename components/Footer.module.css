@@ -1,9 +1,12 @@
-/* components/Footer.module.css — Light-mode premium minimal */
+/* components/Footer.module.css — Dark Cinematic Premium */
 .footer {
-  margin-top: 60px;
-  background: rgba(248, 250, 252, 0.8);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(5, 6, 8, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding: 32px 0;
+  position: relative;
+  z-index: 10;
 }
 
 .container {
@@ -20,38 +23,62 @@
 .brand {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .footerLogo {
+  font-family: 'Oswald', sans-serif;
   font-weight: 700;
-  font-size: 1.15rem;
-  color: #0f172a;
-  letter-spacing: -0.01em;
+  font-size: 1.25rem;
+  color: #ffffff;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .copyright {
-  color: #94a3b8;
-  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
   margin: 0;
+  letter-spacing: 0.5px;
 }
 
 .links {
   display: flex;
-  gap: 28px;
+  gap: 32px;
 }
 
 .link {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Inter', sans-serif;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  transition: color 0.2s ease;
-  letter-spacing: 0.01em;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: #FFB300;
+  transition: width 0.3s ease;
 }
 
 .link:hover {
-  color: #0f172a;
+  color: #FFB300;
+}
+
+.link:hover::after {
+  width: 100%;
 }
 
 @media (max-width: 640px) {
@@ -59,5 +86,12 @@
     flex-direction: column;
     text-align: center;
     padding: 0 20px;
+  }
+  
+  .links {
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
   }
 }

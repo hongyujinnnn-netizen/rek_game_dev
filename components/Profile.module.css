@@ -95,50 +95,138 @@
   color: #e2e8f0;
 }
 
-.matchList {
+.tableContainer {
+  overflow-x: auto;
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.4);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+}
+
+.matchesTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.matchesTable th {
+  padding: 16px 20px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.2);
+  background: rgba(2, 6, 23, 0.8);
+}
+
+.matchesTable td {
+  padding: 16px 20px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s;
+}
+
+.matchesTable tbody tr:hover td {
+  background: rgba(45, 212, 191, 0.05);
+}
+
+.matchesTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.textRight {
+  text-align: right;
+}
+
+.opponentCell {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 12px;
 }
 
-.matchItem {
+.opponentAvatar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: rgba(0,0,0,0.3);
-  padding: 14px 20px;
-  border-radius: 28px;
-  flex-wrap: wrap;
-  gap: 12px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(45, 212, 191, 0.2));
+  color: #2dd4bf;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+}
+
+.opponentName {
+  font-weight: 600;
+}
+
+.winBadge, .lossBadge, .drawBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+  min-width: 60px;
 }
 
 .winBadge {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.15);
   color: #34d399;
-  padding: 4px 12px;
-  border-radius: 40px;
-  font-weight: 700;
-  font-size: 0.75rem;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .lossBadge {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
   color: #f87171;
-  padding: 4px 12px;
-  border-radius: 40px;
-  font-weight: 700;
-  font-size: 0.75rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.drawBadge {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 .matchDate {
-  color: #64748b;
-  font-size: 0.8rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.noMatchesContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background: rgba(2, 6, 23, 0.4);
+  border-radius: 16px;
+  border: 1px dashed rgba(45, 212, 191, 0.3);
+}
+
+.noMatchesIcon {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
 }
 
 .noMatches {
-  color: #94a3b8;
-  text-align: center;
-  padding: 24px;
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+
+.noMatchesSub {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .loaderContainer {

@@ -4,6 +4,8 @@ import { useActionState, useState, useEffect } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { loginAction, registerAction } from '@/app/actions/auth';
 import { createClient } from '@supabase/supabase-js';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
@@ -109,7 +111,9 @@ export default function PortalPage() {
   const strengthColor = ['', '#EF4444', '#F59E0B', '#22C55E'][passwordStrength];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#05050A] relative overflow-hidden px-4 py-12 selection:bg-[#FFB300]/30 selection:text-[#FFB300]">
+    <>
+      <Navbar />
+      <div className="min-h-screen flex items-center justify-center bg-[#05050A] relative overflow-hidden px-4 py-12 selection:bg-[#FFB300]/30 selection:text-[#FFB300]">
 
       {/* Radial glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[#FFB300]/[0.04] rounded-full filter blur-[160px] pointer-events-none" />
@@ -390,7 +394,9 @@ export default function PortalPage() {
         </div>
       </div>
     </div>
-  );
+    <Footer />
+  </>
+);
 }
 
 // ─── Reusable floating-label input ───────────────────────────────────────────

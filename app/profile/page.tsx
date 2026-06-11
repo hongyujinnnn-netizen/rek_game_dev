@@ -34,7 +34,26 @@ export default function ProfilePage() {
           .then(res => res.json())
           .then(matches => {
             if (Array.isArray(matches)) {
-              setRecentMatches(matches);
+              const mappedMatches = matches.map((m: any) => {
+                // Determine if this user played as Red or Blue
+                const isRed = m.player_red_id === payload.session.id;
+                const opponentName = isRed ? (m.player_blue_name || 'Guest') : (m.player_red_name || 'Guest');
+                
+                let result = 'draw';
+                if (m.winner === 'red') {
+                  result = isRed ? 'win' : 'loss';
+                } else if (m.winner === 'blue') {
+                  result = !isRed ? 'win' : 'loss';
+                }
+
+                return {
+                  id: m.id,
+                  opponent_name: opponentName,
+                  result: result,
+                  created_at: m.created_at
+                };
+              });
+              setRecentMatches(mappedMatches);
             }
             setLoading(false);
           })
@@ -59,9 +78,10 @@ export default function ProfilePage() {
 
   if (!session) return null;
 
-  const winRate = session.wins && session.losses && (session.wins + session.losses > 0)
-    ? Math.round((session.wins / (session.wins + session.losses)) * 100)
-    : 0;
+  const wins = session.wins ?? 0;
+  const losses = session.losses ?? 0;
+  const totalGames = wins + losses;
+  const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 
   return (
     <>
@@ -76,11 +96,11 @@ export default function ProfilePage() {
 
           <div className={styles.statsGrid}>
             <div className={styles.statCard}>
-              <span className={styles.statValue}>{session.wins ?? 0}</span>
+              <span className={styles.statValue}>{wins}</span>
               <span className={styles.statLabel}>Wins</span>
             </div>
             <div className={styles.statCard}>
-              <span className={styles.statValue}>{session.losses ?? 0}</span>
+              <span className={styles.statValue}>{losses}</span>
               <span className={styles.statLabel}>Losses</span>
             </div>
             <div className={styles.statCard}>
@@ -88,30 +108,58 @@ export default function ProfilePage() {
               <span className={styles.statLabel}>Win Rate</span>
             </div>
             <div className={styles.statCard}>
-              <span className={styles.statValue}>🏆</span>
-              <span className={styles.statLabel}>Rank</span>
+              <span className={styles.statValue}>{totalGames}</span>
+              <span className={styles.statLabel}>Matches</span>
             </div>
           </div>
 
           <div className={styles.recentSection}>
             <h2>Recent Matches</h2>
-            <div className={styles.matchList}>
-              {recentMatches.length > 0 ? (
-                recentMatches.map(match => (
-                  <div key={match.id} className={styles.matchItem}>
-                    <span>vs {match.opponent_name}</span>
-                    <span className={match.result === 'win' ? styles.winBadge : styles.lossBadge}>
-                      {match.result.toUpperCase()}
-                    </span>
-                    <span className={styles.matchDate}>
-                      {new Date(match.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))
-              ) : (
+            {recentMatches.length > 0 ? (
+              <div className={styles.tableContainer}>
+                <table className={styles.matchesTable}>
+                  <thead>
+                    <tr>
+                      <th>Opponent</th>
+                      <th>Result</th>
+                      <th className={styles.textRight}>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentMatches.map(match => (
+                      <tr key={match.id}>
+                        <td className={styles.opponentCell}>
+                          <span className={styles.opponentAvatar}>
+                            {match.opponent_name?.charAt(0).toUpperCase() || '?'}
+                          </span>
+                          <span className={styles.opponentName}>{match.opponent_name}</span>
+                        </td>
+                        <td>
+                          <span className={
+                            match.result === 'win' ? styles.winBadge :
+                            match.result === 'loss' ? styles.lossBadge :
+                            styles.drawBadge
+                          }>
+                            {match.result.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className={styles.matchDate}>
+                          {new Date(match.created_at).toLocaleDateString(undefined, {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className={styles.noMatchesContainer}>
+                <div className={styles.noMatchesIcon}>⚔️</div>
                 <p className={styles.noMatches}>No matches played yet.</p>
-              )}
-            </div>
+                <p className={styles.noMatchesSub}>Play your first game to see your history.</p>
+              </div>
+            )}
           </div>
         </div>
       </main>

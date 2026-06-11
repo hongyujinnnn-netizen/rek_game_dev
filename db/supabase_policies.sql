@@ -5,17 +5,20 @@
 ALTER TABLE IF EXISTS public.games ENABLE ROW LEVEL SECURITY;
 
 -- Allow anonymous (public) role to SELECT
-CREATE POLICY IF NOT EXISTS anon_select ON public.games
+DROP POLICY IF EXISTS anon_select ON public.games;
+CREATE POLICY anon_select ON public.games
   FOR SELECT
   USING (true);
 
 -- Allow anonymous role to INSERT
-CREATE POLICY IF NOT EXISTS anon_insert ON public.games
+DROP POLICY IF EXISTS anon_insert ON public.games;
+CREATE POLICY anon_insert ON public.games
   FOR INSERT
   WITH CHECK (true);
 
 -- Allow anonymous role to UPDATE
-CREATE POLICY IF NOT EXISTS anon_update ON public.games
+DROP POLICY IF EXISTS anon_update ON public.games;
+CREATE POLICY anon_update ON public.games
   FOR UPDATE
   USING (true)
   WITH CHECK (true);

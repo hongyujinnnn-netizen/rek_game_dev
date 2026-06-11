@@ -16,6 +16,7 @@ type PlayerSession = {
 export default function Navbar() {
   const [session, setSession] = useState<PlayerSession | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -37,16 +38,24 @@ export default function Navbar() {
         <span className={styles.logoText}>LEUNG<span className={styles.logoAccent}>REK</span></span>
       </Link>
       
-      <div className={styles.links}>
-        <Link href="/" className={styles.navLink}>Play</Link>
-        <Link href="/profile" className={styles.navLink}>Profile</Link>
-        <Link href="#" className={styles.navLink}>About</Link>
+      <button 
+        className={styles.mobileToggle} 
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        aria-label="Toggle menu"
+      >
+        <span className={`${styles.hamburger} ${mobileMenuOpen ? styles.hamburgerOpen : ''}`}></span>
+      </button>
+
+      <div className={`${styles.links} ${mobileMenuOpen ? styles.linksOpen : ''}`}>
+        <Link href="/" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Play</Link>
+        <Link href="/profile" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Profile</Link>
+        <Link href="#" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>About</Link>
         {session ? (
           <span className={styles.navLink} style={{ color: '#FFB300', fontWeight: 600 }}>
             {session.name}
           </span>
         ) : (
-          <Link href="/portal" className={styles.navLink}>
+          <Link href="/portal" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>
             Sign In
           </Link>
         )}

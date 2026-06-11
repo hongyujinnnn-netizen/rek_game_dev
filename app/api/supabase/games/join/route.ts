@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@/util/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +11,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'room_code and playerId required' }, { status: 400 });
     }
 
-    const supabase = createClient(await cookies());
+    const cookieStore = await cookies();
+    const token = cookieStore.get('leung_rek_access_token')?.value;
+
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!,
+      token ? {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      } : {}
+    );
 
     const { data, error } = await supabase
       .from('games')
@@ -25,7 +38,25 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows updated. The room is either full, doesn't exist, or we already joined.
+        const { data: existingData } = await supabase
+          .from('games')
+          .select('*')
+          .eq('room_code', room_code)
+          .single();
+          
+        if (existingData) {
+          if (existingData.player_id_blue === playerId || existingData.player_id_red === playerId) {
+            return NextResponse.json(existingData);
+          }
+          return NextResponse.json({ error: 'Room is already full' }, { status: 403 });
+        }
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

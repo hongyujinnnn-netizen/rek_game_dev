@@ -312,8 +312,17 @@ export default function ChessGame({
 
         setBoard(deserializeBoard(boardState));
         setMoveHistory(Array.isArray(moveHistoryData) ? moveHistoryData : []);
+        const wasFinished = gameState === 'finished';
         setGameState(data.status === 'finished' ? 'finished' : 'active');
         setWinner(data.winner ?? null);
+
+        if (data.status === 'finished' && !wasFinished && isOnline && roomCode) {
+          fetch('/api/supabase/stats/record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_code: roomCode })
+          }).catch(err => console.error('Failed to record stats', err));
+        }
 
         if (!isMyCallWindow) {
           // Safe to apply turn and call state from server
@@ -375,15 +384,7 @@ export default function ChessGame({
     return () => window.clearTimeout(timeoutId);
   }, [callTimer, turn, isOnline, roomCode, board, moveHistory]);
 
-  useEffect(() => {
-    if (gameState === 'finished' && isOnline && roomCode) {
-      fetch('/api/supabase/stats/record', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_code: roomCode })
-      }).catch(err => console.error('Failed to record stats', err));
-    }
-  }, [gameState, isOnline, roomCode]);
+  // Removed useEffect for /record to avoid race conditions
 
   useEffect(() => {
     if (!isOnline || !roomCode) {
@@ -418,7 +419,9 @@ export default function ChessGame({
           });
 
           if (!createRes.ok) {
-            setOnlineStatus('Unable to create the game room.');
+            const errBody = await createRes.text();
+            console.error('Create game failed:', createRes.status, errBody);
+            setOnlineStatus(`Unable to create the game room: ${errBody}`);
             return;
           }
 
@@ -481,19 +484,19 @@ export default function ChessGame({
             console.error('Error processing real-time update:', err);
           }
         }
-      )
-      .on('system', { event: 'subscribe' }, () => {
+      );
+
+    channel.subscribe((status, err) => {
+      if (status === 'SUBSCRIBED') {
         console.log('Real-time subscription established');
         setRealtimeActive(true);
         setOnlineStatus('Real-time sync active');
-      })
-      .on('system', { event: 'error' }, (err) => {
-        console.error('Real-time subscription error:', err);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('Real-time subscription error:', status, err);
         setRealtimeActive(false);
         setOnlineStatus('Real-time sync failed. Using polling as backup...');
-      });
-
-    channel.subscribe();
+      }
+    });
     channelRef.current = channel;
 
     return () => {
@@ -687,7 +690,15 @@ export default function ChessGame({
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: getNextPlayer(piece.player), status: 'finished', winner: piece.player, called_square: null, call_timer: null, move_history: nextHistory } }),
-        }).catch(() => setOnlineStatus('Unable to sync finished game state.'));
+        })
+        .then(() => {
+          fetch('/api/supabase/stats/record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_code: roomCode })
+          }).catch(err => console.error('Failed to record stats', err));
+        })
+        .catch(() => setOnlineStatus('Unable to sync finished game state.'));
       }
       return;
     }
