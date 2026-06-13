@@ -48,12 +48,23 @@ export default function Navbar() {
 
       <div className={`${styles.links} ${mobileMenuOpen ? styles.linksOpen : ''}`}>
         <Link href="/" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Play</Link>
-        <Link href="/profile" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Profile</Link>
+        <Link href="/profile" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Matches</Link>
         <Link href="#" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>About</Link>
         {session ? (
-          <span className={styles.navLink} style={{ color: '#FFB300', fontWeight: 600 }}>
-            {session.name}
-          </span>
+          <div className={styles.accountMenu}>
+            <span className={styles.accountName}>
+              {session.name}
+            </span>
+            <button 
+              className={styles.logoutBtn}
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.reload();
+              }}
+            >
+              Logout
+            </button>
+          </div>
         ) : (
           <Link href="/portal" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>
             Sign In

@@ -181,3 +181,35 @@
     font-size: 1.2rem;
   }
 }
+
+.accountMenu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accountName {
+  color: #FFB300;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: default;
+}
+
+.logoutBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutBtn:hover {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: rgba(231, 76, 60, 0.4);
+  color: #e74c3c;
+}
