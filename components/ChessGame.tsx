@@ -12,7 +12,7 @@ type GameRoom = {
   room_code: string;
   board_state: RekBoard;
   turn: Player;
-  status: 'waiting' | 'in_progress' | 'finished';
+  status: 'waiting' | 'in_progress' | 'finished' | 'abandoned';
   player_red: string | null;
   player_blue: string | null;
   player_id_red: string | null;
@@ -335,7 +335,7 @@ export default function ChessGame({
         setGameState(data.status === 'finished' ? 'finished' : 'active');
         setWinner(data.winner ?? null);
 
-        if (data.status === 'active' && actualHistory.length === 0) {
+        if (data.status === 'in_progress' && actualHistory.length === 0) {
           setWaitingForRematch(false);
           setOpponentWantsRematch(false);
         }
