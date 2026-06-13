@@ -1,14 +1,17 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ChessGame2 from './ChessGame_2';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SmokeEffect from './SmokeEffect';
 import styles from './LeungRekHome.module.css';
 
 type GameConfig = {
   isOnline: boolean;
   roomCode: string | null;
+  isCreator?: boolean;
 };
 
 type PlayerSession = {
@@ -33,6 +36,7 @@ function createRoomCode(): string {
 }
 
 export default function LeungRekHome() {
+  const router = useRouter();
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [roomCode, setRoomCode] = useState('');
   const [session, setSession] = useState<PlayerSession | null>(null);
@@ -62,6 +66,7 @@ export default function LeungRekHome() {
         playerName={session?.name ?? null}
         playerId={session?.id ?? null}
         onExit={() => setGameConfig(null)}
+        isCreator={gameConfig.isCreator}
       />
     );
   }
@@ -70,6 +75,7 @@ export default function LeungRekHome() {
     <>
       <Navbar />
       <main className={styles.shell}>
+        <SmokeEffect />
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>Leung Rek</h1>
           
@@ -91,7 +97,13 @@ export default function LeungRekHome() {
             </button>
             <button 
               className={styles.btnSecondary}
-              onClick={() => setShowJoinModal(true)}
+              onClick={() => {
+                if (!session) {
+                  router.push('/portal');
+                } else {
+                  setShowJoinModal(true);
+                }
+              }}
             >
               Join Room
               <svg className={styles.playIcon} viewBox="0 0 24 24">
@@ -121,7 +133,13 @@ export default function LeungRekHome() {
 
             <button
               className={styles.modeCard}
-              onClick={() => setGameConfig({ isOnline: true, roomCode: createRoomCode() })}
+              onClick={() => {
+                if (!session) {
+                  router.push('/portal');
+                } else {
+                  setGameConfig({ isOnline: true, roomCode: createRoomCode(), isCreator: true });
+                }
+              }}
             >
               <span className={styles.modeTitle}>Create Private Room</span>
               <span className={styles.modeText}>Generate a room code for an online match.</span>
@@ -142,7 +160,7 @@ export default function LeungRekHome() {
               onSubmit={(event) => {
                 event.preventDefault();
                 if (normalizedRoomCode) {
-                  setGameConfig({ isOnline: true, roomCode: normalizedRoomCode });
+                  setGameConfig({ isOnline: true, roomCode: normalizedRoomCode, isCreator: false });
                 }
               }}
             >

@@ -1,0 +1,76 @@
+.smokeContainer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.6; /* Lowered overall opacity */
+}
+
+.svgFilter {
+  position: absolute;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.smokeWrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  filter: url(#real-smoke) blur(15px);
+  opacity: 0.6;
+  bottom: 0; /* Keep it anchored low */
+}
+
+.smoke {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(160, 170, 180, 0.6) 0%, transparent 60%);
+  animation: drift 40s infinite linear;
+}
+
+.smoke1 {
+  width: 120vw;
+  height: 50vh;
+  bottom: -15%;
+  left: -10%;
+  animation-duration: 45s;
+}
+
+.smoke2 {
+  width: 140vw;
+  height: 60vh;
+  bottom: -25%;
+  right: -10%;
+  background: radial-gradient(circle at center, rgba(130, 140, 150, 0.4) 0%, transparent 60%);
+  animation-duration: 55s;
+  animation-direction: reverse;
+}
+
+.smoke3 {
+  width: 100vw;
+  height: 40vh;
+  bottom: -5%;
+  left: 10%;
+  background: radial-gradient(circle at center, rgba(255, 200, 50, 0.1) 0%, transparent 60%);
+  animation-duration: 50s;
+}
+
+.smoke4 {
+  width: 110vw;
+  height: 45vh;
+  bottom: -10%;
+  right: 10%;
+  background: radial-gradient(circle at center, rgba(100, 110, 120, 0.3) 0%, transparent 60%);
+  animation-duration: 60s;
+  animation-delay: -10s;
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  25% { transform: translate(4vw, -2vh) scale(1.05) rotate(2deg); }
+  50% { transform: translate(-2vw, 3vh) scale(0.95) rotate(-2deg); }
+  75% { transform: translate(-4vw, -1vh) scale(1.02) rotate(1deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+}

@@ -33,6 +33,7 @@ export type ChessGameProps = {
   playerName?: string | null;
   playerId?: string | null;
   onExit?: () => void;
+  isCreator?: boolean;
 };
 
 function cloneBoard(board: RekBoard): RekBoard {
@@ -264,6 +265,7 @@ export default function ChessGame({
   playerName = null,
   playerId = null,
   onExit,
+  isCreator = false,
 }: ChessGameProps) {
   const [board, setBoard] = useState<RekBoard>(() => createInitialBoard());
   const [turn, setTurn] = useState<Player>('red');
@@ -276,6 +278,10 @@ export default function ChessGame({
   const [callTimer, setCallTimer] = useState<number | null>(null);
   const [playerColor, setPlayerColor] = useState<Player | null>(null);
   const [onlineStatus, setOnlineStatus] = useState<string | null>(null);
+  const [roomError, setRoomError] = useState<string | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [waitingForRematch, setWaitingForRematch] = useState(false);
+  const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
   const [waitingForOpponent, setWaitingForOpponent] = useState<boolean>(false);
   const [realtimeActive, setRealtimeActive] = useState(false);
   const channelRef = useRef<any>(null);
@@ -295,6 +301,15 @@ export default function ChessGame({
         const boardState = typeof data.board_state === 'string' ? JSON.parse(data.board_state) : data.board_state;
         const calledSquareData = typeof data.called_square === 'string' ? JSON.parse(data.called_square) : data.called_square;
         const moveHistoryData = typeof data.move_history === 'string' ? JSON.parse(data.move_history) : (data.move_history ?? []);
+        const historyArray = Array.isArray(moveHistoryData) ? moveHistoryData : [];
+
+        if (data.status === 'abandoned') {
+          setRoomError('Opponent has left the room.');
+          return;
+        }
+        
+        const actualHistory = historyArray.filter((m: any) => m.from !== 'REMATCH');
+        const rematchRequests = historyArray.filter((m: any) => m.from === 'REMATCH');
 
         // Determine which color this client plays
         let myColor: Player | null = null;
@@ -304,6 +319,10 @@ export default function ChessGame({
           myColor = 'blue';
         }
 
+        if (myColor && rematchRequests.some((m: any) => m.to !== myColor)) {
+          setOpponentWantsRematch(true);
+        }
+
         // If the server says it's still this player's turn with an active call_timer,
         // and we already have a local callTimer running, skip overwriting — we own
         // this state locally while the call window is open.
@@ -311,10 +330,15 @@ export default function ChessGame({
         const isMyCallWindow = myColor !== null && data.turn === myColor && remoteCallTimer !== null;
 
         setBoard(deserializeBoard(boardState));
-        setMoveHistory(Array.isArray(moveHistoryData) ? moveHistoryData : []);
+        setMoveHistory(actualHistory);
         const wasFinished = gameState === 'finished';
         setGameState(data.status === 'finished' ? 'finished' : 'active');
         setWinner(data.winner ?? null);
+
+        if (data.status === 'active' && actualHistory.length === 0) {
+          setWaitingForRematch(false);
+          setOpponentWantsRematch(false);
+        }
 
         if (data.status === 'finished' && !wasFinished && isOnline && roomCode) {
           fetch('/api/supabase/stats/record', {
@@ -407,6 +431,11 @@ export default function ChessGame({
         const existingRoom = await res.json();
 
         if (!existingRoom) {
+          if (!isCreator) {
+            setRoomError('Room not found. Please check the code and try again.');
+            return;
+          }
+
           const createRes = await fetch('/api/supabase/games/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -471,17 +500,22 @@ export default function ChessGame({
       .channel(`room:${roomCode}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'games', filter: `room_code=eq.${roomCode}` },
+        { event: '*', schema: 'public', table: 'games', filter: `room_code=eq.${roomCode}` },
         (payload) => {
-          if (!isActive || !payload.new) {
+          if (!isActive) return;
+
+          if (payload.eventType === 'DELETE') {
+            setRoomError('Opponent has left the room.');
             return;
           }
 
-          try {
-            console.log('Real-time update received:', payload);
-            applyRemoteState(payload.new as GameRoom);
-          } catch (err) {
-            console.error('Error processing real-time update:', err);
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            try {
+              console.log('Real-time update received:', payload);
+              applyRemoteState(payload.new as GameRoom);
+            } catch (err) {
+              console.error('Error processing real-time update:', err);
+            }
           }
         }
       );
@@ -528,6 +562,9 @@ export default function ChessGame({
           if (!realtimeActive) {
             applyRemoteState(existingRoom);
           }
+        } else {
+          setRoomError('Opponent has left the room.');
+          window.clearInterval(intervalId);
         }
       } catch {
         // Silence polling errors
@@ -580,17 +617,72 @@ export default function ChessGame({
     setBoardHistory([]);
     setCalledSquare(null);
     setCallTimer(null);
+    setWaitingForRematch(false);
+    setOpponentWantsRematch(false);
 
     if (isOnline && roomCode) {
       fetch('/api/supabase/games/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ room_code: roomCode, updates: { board_state: createInitialBoard(), turn: 'red', status: 'active', winner: null, called_square: null, call_timer: null, move_history: [] } }),
-      }).catch(() => setOnlineStatus('Unable to reset online room state.'));
+      })
+      .then((res) => {
+        if (!res.ok) {
+          setRoomError('Opponent has left the room.');
+        }
+      })
+      .catch(() => setOnlineStatus('Unable to reset online room state.'));
     }
   }, [isOnline, roomCode]);
 
+  const handlePlayAgain = useCallback(() => {
+    if (!isOnline) {
+      resetGame();
+      return;
+    }
+
+    if (opponentWantsRematch) {
+      resetGame();
+    } else {
+      setWaitingForRematch(true);
+      if (roomCode && playerColor) {
+        const newHistory = [...moveHistory, { from: 'REMATCH', to: playerColor, piece: null, captures: [] }];
+        fetch('/api/supabase/games/update', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            room_code: roomCode, 
+            updates: { move_history: newHistory } 
+          })
+        }).catch(console.error);
+      }
+    }
+  }, [isOnline, opponentWantsRematch, resetGame, moveHistory, playerColor, roomCode]);
+
   const handleLeaveRoom = useCallback(() => {
+    if (isOnline && gameState === 'active' && playerColor && !waitingForOpponent) {
+      setShowLeaveConfirm(true);
+      return;
+    }
+
+    if (isOnline && roomCode) {
+      if (waitingForOpponent || gameState === 'finished') {
+        fetch('/api/supabase/games/update', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room_code: roomCode, updates: { status: 'abandoned' } }),
+          keepalive: true
+        }).catch(() => {});
+
+        fetch('/api/supabase/games/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room_code: roomCode }),
+          keepalive: true
+        }).catch(console.error);
+      }
+    }
+
     if (onExit) {
       onExit();
       return;
@@ -600,7 +692,111 @@ export default function ChessGame({
     resetGame();
     setOnlineStatus('Left the room.');
     setWaitingForOpponent(false);
-  }, [onExit, resetGame]);
+  }, [gameState, isOnline, onExit, playerColor, resetGame, roomCode, waitingForOpponent]);
+
+  const confirmLeaveAction = useCallback(() => {
+    setShowLeaveConfirm(false);
+    
+    if (isOnline && gameState === 'active' && playerColor && !waitingForOpponent) {
+      const opponentColor = playerColor === 'red' ? 'blue' : 'red';
+
+      if (roomCode) {
+        fetch('/api/supabase/games/update', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            room_code: roomCode, 
+            updates: { 
+              status: 'finished', 
+              winner: opponentColor, 
+              call_timer: null,
+            } 
+          }),
+        })
+        .then(() => {
+          return fetch('/api/supabase/stats/record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_code: roomCode })
+          }).catch(err => console.error('Failed to record stats', err));
+        })
+        .then(() => {
+          setTimeout(() => {
+            fetch('/api/supabase/games/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ room_code: roomCode })
+            }).catch(console.error);
+          }, 2500);
+        })
+        .catch(() => console.error('Failed to update game state to finished'));
+      }
+    }
+
+    if (onExit) {
+      onExit();
+      return;
+    }
+
+    resetGame();
+    setOnlineStatus('Left the room.');
+    setWaitingForOpponent(false);
+  }, [gameState, isOnline, onExit, playerColor, resetGame, roomCode, waitingForOpponent]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isOnline && gameState === 'active' && playerColor && !waitingForOpponent) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    const handleUnload = () => {
+      if (isOnline && waitingForOpponent && roomCode) {
+        fetch('/api/supabase/games/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room_code: roomCode }),
+          keepalive: true,
+        }).catch(() => {});
+        return;
+      }
+
+      if (isOnline && gameState === 'active' && playerColor && !waitingForOpponent && roomCode) {
+        const opponentColor = playerColor === 'red' ? 'blue' : 'red';
+        
+        fetch('/api/supabase/games/update', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            room_code: roomCode, 
+            updates: { 
+              status: 'finished', 
+              winner: opponentColor, 
+              call_timer: null,
+            } 
+          }),
+          keepalive: true,
+        }).catch(() => {});
+        
+        // Fire parallel request, as queued promises won't execute on unload
+        fetch('/api/supabase/stats/record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room_code: roomCode }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, [isOnline, gameState, playerColor, waitingForOpponent, roomCode]);
 
   const undoMove = useCallback((): void => {
     const previousBoard = boardHistory.at(-1);
@@ -703,14 +899,14 @@ export default function ChessGame({
       return;
     }
 
-    // Don't switch turn yet — the player who just moved gets a 30s call window
-    setCallTimer(30);
+    // Don't switch turn yet — the player who just moved gets a 5s call window
+    setCallTimer(5);
 
     if (isOnline && roomCode) {
       fetch('/api/supabase/games/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: piece.player, status: 'active', winner: null, called_square: null, move_history: nextHistory, call_timer: 30 } }),
+        body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: piece.player, status: 'active', winner: null, called_square: null, move_history: nextHistory, call_timer: 5 } }),
       }).catch(() => setOnlineStatus('Unable to sync move with online room state.'));
     }
   }, [board, calledSquare, isOnline, moveHistory, playerColor, roomCode, turn]);
@@ -838,13 +1034,26 @@ export default function ChessGame({
         )}
 
         <div className={styles.boardWrapper}>
-          {waitingForOpponent && (
+          {waitingForOpponent && !roomError && (
             <div className={styles.waitingOverlay} role="status" aria-live="polite">
               <div className={styles.waitingMessage}>
                 <div>Waiting for an opponent to join…</div>
                 <div style={{ marginTop: 12 }}>
                   <button onClick={handleLeaveRoom} className={styles.leaveButton} type="button">
                     Cancel &amp; Leave
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {roomError && (
+            <div className={styles.waitingOverlay} role="status" aria-live="polite">
+              <div className={styles.waitingMessage}>
+                <div>{roomError}</div>
+                <div style={{ marginTop: 12 }}>
+                  <button onClick={handleLeaveRoom} className={styles.leaveButton} type="button">
+                    Go Back
                   </button>
                 </div>
               </div>
@@ -892,22 +1101,57 @@ export default function ChessGame({
       </main>
 
       {/* ================= GAME OVER OVERLAY ================= */}
-      {gameState === 'finished' && winner && (
+      {gameState === 'finished' && winner && !roomError && (
         <div className={styles.gameOverOverlay}>
           <div className={styles.gameOverCard}>
-            <h2 className={styles.gameOverTitle}>Game Over</h2>
+            <h2 className={styles.gameOverTitle}>
+              {moveHistory.at(-1)?.captures?.includes('king') ? 'Game End' : 'Player Leave'}
+            </h2>
             <p className={styles.gameOverSubtitle}>
-              {getPlayerLabel(winner)} captured the king and wins!
+              {isOnline && playerColor
+                ? (winner === playerColor ? 'You Win the matches...' : 'You lose the matches...')
+                : `${getPlayerLabel(winner)} captured the king and wins!`}
             </p>
             <div className={styles.gameOverActions}>
-              <button onClick={resetGame} className={`${styles.gameOverBtn} ${styles.gameOverBtnPrimary}`}>
-                🔄 Play Again
-              </button>
+              {(!isOnline || moveHistory.at(-1)?.captures?.includes('king')) && (
+                <button 
+                  onClick={handlePlayAgain} 
+                  disabled={waitingForRematch}
+                  className={`${styles.gameOverBtn} ${styles.gameOverBtnPrimary}`}
+                  style={waitingForRematch ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+                >
+                  {waitingForRematch 
+                    ? '⏳ Waiting for opponent...' 
+                    : opponentWantsRematch 
+                      ? '✅ Accept Rematch' 
+                      : '🔄 Play Again'}
+                </button>
+              )}
               {onExit && (
-                <button onClick={onExit} className={`${styles.gameOverBtn} ${styles.gameOverBtnSecondary}`}>
+                <button onClick={handleLeaveRoom} className={`${styles.gameOverBtn} ${styles.gameOverBtnSecondary}`}>
                   🏠 Home
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= LEAVE CONFIRM OVERLAY ================= */}
+      {showLeaveConfirm && (
+        <div className={styles.gameOverOverlay}>
+          <div className={styles.gameOverCard}>
+            <h2 className={styles.gameOverTitle} style={{ background: 'none', WebkitTextFillColor: 'initial', color: '#e74c3c' }}>Leave Game?</h2>
+            <p className={styles.gameOverSubtitle}>
+              Are you sure you want to leave?<br />You will automatically lose the match.
+            </p>
+            <div className={styles.gameOverActions}>
+              <button onClick={confirmLeaveAction} className={`${styles.gameOverBtn} ${styles.gameOverBtnPrimary}`} style={{ background: 'rgba(231, 76, 60, 0.15)', borderColor: 'rgba(231, 76, 60, 0.3)', color: '#e74c3c' }}>
+                Yes, Leave
+              </button>
+              <button onClick={() => setShowLeaveConfirm(false)} className={`${styles.gameOverBtn} ${styles.gameOverBtnSecondary}`}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -918,7 +1162,7 @@ export default function ChessGame({
         <button
           onClick={undoMove}
           className={styles.iconCornerBtn}
-          disabled={moveHistory.length === 0}
+          disabled={moveHistory.length === 0 || isOnline}
           title="Undo Move"
         >
           ↩
@@ -928,7 +1172,7 @@ export default function ChessGame({
       {/* ================= BOTTOM RIGHT: HOME ================= */}
       <div className={styles.bottomRightCorner}>
         {onExit && (
-          <button onClick={onExit} className={styles.iconCornerBtn} title="Return to Main Menu">
+          <button onClick={handleLeaveRoom} className={styles.iconCornerBtn} title="Return to Main Menu">
             🏠
           </button>
         )}
@@ -943,8 +1187,7 @@ export default function ChessGame({
           {roomCode && isOnline && (
             <button
               onClick={() => {
-                const invite = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
-                navigator.clipboard.writeText(invite).then(() => setOnlineStatus('Link Copied!'));
+                navigator.clipboard.writeText(roomCode).then(() => setOnlineStatus('Code Copied!'));
               }}
               className={styles.sidebarActionBtn}
             >
