@@ -212,13 +212,16 @@
   width: min(540px, calc(100vh - 200px), calc(100vw - 200px));
   aspect-ratio: 1;
   overflow: hidden;
-  background: #2b1d13;
-  border: 6px solid rgba(50, 40, 30, 0.9);
-  border-radius: 4px;
+  background: #1a120e;
+  border: 12px solid #291e16;
+  border-radius: 8px;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 10px rgba(0,0,0,0.8),
     0 24px 48px rgba(0, 0, 0, 0.5),
-    0 0 80px rgba(0, 0, 0, 0.2);
+    0 0 80px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  /* Wood texture base */
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 6px);
 }
 
 .square {
@@ -230,11 +233,12 @@
   aspect-ratio: 1;
   border: 0;
   cursor: pointer;
-  transition: filter 0.15s ease;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 0 2px rgba(0,0,0,0.3);
 }
 
 .square:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.2) contrast(1.1);
 }
 
 .square:focus-visible {
@@ -243,12 +247,15 @@
   outline-offset: -3px;
 }
 
+/* Premium Marble/Wood styles */
 .lightSquare {
-  background: #e9d6b8;
+  background: radial-gradient(circle at 30% 30%, #f0e4d0, #d5bfaa);
+  box-shadow: inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.1);
 }
 
 .darkSquare {
-  background: #9b714c;
+  background: radial-gradient(circle at 30% 30%, #7e5a40, #593b26);
+  box-shadow: inset 2px 2px 5px rgba(255,255,255,0.1), inset -2px -2px 5px rgba(0,0,0,0.4);
 }
 
 /* Square state overlays */
@@ -256,78 +263,153 @@
 .legalSquare::after,
 .captureSquare::after {
   position: absolute;
-  inset: 6px;
   content: '';
-  border-radius: 4px;
+  border-radius: 50%;
   pointer-events: none;
   z-index: 2;
+  transition: all 0.2s ease;
 }
 
 .selectedSquare::after {
-  border: 3px solid #f5d45c;
-  box-shadow: inset 0 0 12px rgba(245, 212, 92, 0.2);
+  inset: 0;
+  border-radius: 0;
+  background: rgba(245, 212, 92, 0.2);
+  border: 2px solid #f5d45c;
+  box-shadow: inset 0 0 20px rgba(245, 212, 92, 0.4), 0 0 15px rgba(245, 212, 92, 0.5);
 }
 
 .legalSquare::after {
-  background: rgba(36, 122, 90, 0.3);
-  border-radius: 50%;
-  inset: 30%;
+  inset: 38%;
+  background: radial-gradient(circle, #52e0a0 0%, rgba(82, 224, 160, 0) 70%);
+  box-shadow: 0 0 10px #52e0a0;
+  opacity: 0.8;
+  animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
 }
 
 .captureSquare::after {
-  background: rgba(175, 44, 44, 0.25);
-  border: 3px solid rgba(175, 44, 44, 0.65);
+  inset: 4px;
+  border-radius: 50%;
+  border: 4px solid #ff4d4d;
+  box-shadow: inset 0 0 10px rgba(255, 77, 77, 0.3), 0 0 15px rgba(255, 77, 77, 0.6);
+  animation: calledPulse 1.5s infinite;
 }
 
 .calledSquare::after {
   position: absolute;
   inset: 0;
   content: '';
-  border: 3px solid #f1c40f;
-  background: rgba(241, 196, 15, 0.12);
+  border: 4px solid #f1c40f;
+  background: rgba(241, 196, 15, 0.15);
   pointer-events: none;
   z-index: 2;
+  box-shadow: inset 0 0 20px rgba(241, 196, 15, 0.4), 0 0 20px rgba(241, 196, 15, 0.4);
   animation: calledPulse 2s ease-in-out infinite;
 }
 
 /* ============================================================
-   GAME PIECES
+   GAME PIECES (3D TOKENS)
    ============================================================ */
 .piece {
   position: relative;
   z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72%;
+  width: 75%;
   aspect-ratio: 1;
-  color: #fff;
-  border-radius: 50%;
-  box-shadow:
-    inset 0 -4px 0 rgba(0, 0, 0, 0.2),
-    0 4px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.15s ease;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: grab;
+}
+
+.piece:active {
+  cursor: grabbing;
 }
 
 .square:hover .piece {
-  transform: scale(1.05);
+  transform: scale(1.1) translateY(-6px);
+}
+
+.pieceShadow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  filter: blur(4px);
+  transform: translateY(6px) scale(0.9);
+  transition: all 0.25s ease;
+  z-index: 1;
+}
+
+.square:hover .pieceShadow {
+  transform: translateY(12px) scale(0.85);
+  filter: blur(6px);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.pieceInner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 
+    inset 0 4px 6px rgba(255, 255, 255, 0.4),
+    inset 0 -6px 8px rgba(0, 0, 0, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pieceHighlight {
+  position: absolute;
+  top: 8%;
+  left: 15%;
+  width: 30%;
+  height: 20%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 100%);
+  transform: rotate(-30deg);
+  pointer-events: none;
 }
 
 .pieceRole {
-  font-size: clamp(0.58rem, 2vw, 0.92rem);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-size: clamp(1.2rem, 3.5vw, 2.2rem);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  font-family: serif;
 }
 
-.red {
-  background: linear-gradient(145deg, #c94038, #a82e27);
-  border: 2px solid rgba(241, 178, 163, 0.6);
+.roleKing {
+  color: #fff2cc;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255, 215, 0, 0.6);
 }
 
-.blue {
-  background: linear-gradient(145deg, #2878b5, #1a5a8a);
-  border: 2px solid rgba(155, 199, 231, 0.6);
+.roleCommoner {
+  color: #f0f0f0;
+}
+
+/* Red Token (Ruby/Gold) */
+.red .pieceInner {
+  background: radial-gradient(circle at 30% 30%, #e74c3c 0%, #961919 70%, #520000 100%);
+  border: 2px solid #ffd700; /* Gold rim */
+  box-shadow: 
+    inset 0 4px 6px rgba(255, 150, 150, 0.5),
+    inset 0 -6px 8px rgba(0, 0, 0, 0.8),
+    0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* Blue Token (Sapphire/Silver) */
+.blue .pieceInner {
+  background: radial-gradient(circle at 30% 30%, #3498db 0%, #15558d 70%, #052240 100%);
+  border: 2px solid #e0e0e0; /* Silver rim */
+  box-shadow: 
+    inset 0 4px 6px rgba(150, 200, 255, 0.5),
+    inset 0 -6px 8px rgba(0, 0, 0, 0.8),
+    0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
 /* ============================================================

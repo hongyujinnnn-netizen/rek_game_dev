@@ -247,7 +247,8 @@ function canCallSquare(board: RekBoard, square: Square, callingPlayer: Player): 
   return (
     isWithinBoard(square) &&
     !board[square.row][square.col] &&
-    hasLegalMoveToSquare(board, square, forcedPlayer)
+    hasLegalMoveToSquare(board, square, forcedPlayer) &&
+    getInterventionCaptureSquares(board, square, forcedPlayer).length > 0
   );
 }
 
@@ -1061,8 +1062,10 @@ export default function ChessGame({
           )}
 
           <div className={styles.board} role="grid" aria-label="Leung Rek board">
-            {board.map((row, rowIndex) =>
-              row.map((piece, colIndex) => {
+            {(playerColor === 'blue' ? [...board].reverse() : board).map((row, renderedRowIndex) => {
+              const rowIndex = playerColor === 'blue' ? BOARD_SIZE - 1 - renderedRowIndex : renderedRowIndex;
+              return (playerColor === 'blue' ? [...row].reverse() : row).map((piece, renderedColIndex) => {
+                const colIndex = playerColor === 'blue' ? BOARD_SIZE - 1 - renderedColIndex : renderedColIndex;
                 const square = { row: rowIndex, col: colIndex };
                 const selected = isSameSquare(selectedSquare, square);
                 const called = isSameSquare(calledSquare, square);
@@ -1086,16 +1089,20 @@ export default function ChessGame({
                     aria-label={squareName(square)}
                   >
                     {piece && (
-                      <span className={`${styles.piece} ${styles[piece.player]}`}>
-                        <span className={styles.pieceRole}>
-                          {piece.role === 'king' ? 'SD' : 'KON'}
-                        </span>
-                      </span>
+                      <div className={`${styles.piece} ${styles[piece.player]}`}>
+                        <div className={styles.pieceShadow}></div>
+                        <div className={styles.pieceInner}>
+                          <div className={styles.pieceHighlight}></div>
+                          <span className={`${styles.pieceRole} ${piece.role === 'king' ? styles.roleKing : styles.roleCommoner}`}>
+                            {piece.role === 'king' ? '♔' : '♙'}
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </button>
                 );
-              })
-            )}
+              });
+            })}
           </div>
         </div>
       </main>
