@@ -17,11 +17,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { accessToken, refreshToken, session } = await signUpPlayer(email, password, name);
+    const result = await signUpPlayer(email, password, name);
 
-    await setAuthCookies(accessToken, refreshToken);
+    if (result.requiresOtp) {
+      return NextResponse.json({ requiresOtp: true, email: result.email });
+    }
 
-    return NextResponse.json({ session });
+    await setAuthCookies(result.accessToken!, result.refreshToken!);
+
+    return NextResponse.json({ session: result.session });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to create account.' },
