@@ -286,6 +286,12 @@ export default function ChessGame({
   const [waitingForOpponent, setWaitingForOpponent] = useState<boolean>(false);
   const [realtimeActive, setRealtimeActive] = useState(false);
   const channelRef = useRef<any>(null);
+  const gameStateRef = useRef<GameState>(gameState);
+  
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
   const [clientPlayerId] = useState(() => {
     if (playerId) return playerId;
     return playerName ? `user:${playerName}` : `guest-${Math.random().toString(36).slice(2, 10)}`;
@@ -332,7 +338,7 @@ export default function ChessGame({
 
         setBoard(deserializeBoard(boardState));
         setMoveHistory(actualHistory);
-        const wasFinished = gameState === 'finished';
+        const wasFinished = gameStateRef.current === 'finished';
         setGameState(data.status === 'finished' ? 'finished' : 'active');
         setWinner(data.winner ?? null);
 
@@ -341,12 +347,16 @@ export default function ChessGame({
           setOpponentWantsRematch(false);
         }
 
+        // Only the winning player's client handles stats recording to avoid duplicate rows
+        // If there's no winner yet, or we're not the winner, we don't record.
         if (data.status === 'finished' && !wasFinished && isOnline && roomCode) {
-          fetch('/api/supabase/stats/record', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room_code: roomCode })
-          }).catch(err => console.error('Failed to record stats', err));
+          if (myColor && data.winner === myColor) {
+            fetch('/api/supabase/stats/record', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ room_code: roomCode })
+            }).catch(err => console.error('Failed to record stats', err));
+          }
         }
 
         if (!isMyCallWindow) {
@@ -551,6 +561,7 @@ export default function ChessGame({
 
     // Keep polling active as a backup, even when real-time is active
     const intervalId = window.setInterval(async () => {
+      if (realtimeActive) return; // Stop wasting bandwidth if socket is healthy
       try {
         const res = await fetch(`/api/supabase/games?room=${encodeURIComponent(roomCode)}`);
         if (!res.ok) {
@@ -559,7 +570,7 @@ export default function ChessGame({
 
         const existingRoom = await res.json();
         if (existingRoom) {
-          // Only update if real-time isn't active to avoid double updates
+          // Double check realtimeActive just in case it connected while fetching
           if (!realtimeActive) {
             applyRemoteState(existingRoom);
           }
@@ -715,13 +726,6 @@ export default function ChessGame({
           }),
         })
         .then(() => {
-          return fetch('/api/supabase/stats/record', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room_code: roomCode })
-          }).catch(err => console.error('Failed to record stats', err));
-        })
-        .then(() => {
           setTimeout(() => {
             fetch('/api/supabase/games/delete', {
               method: 'POST',
@@ -777,14 +781,6 @@ export default function ChessGame({
               call_timer: null,
             } 
           }),
-          keepalive: true,
-        }).catch(() => {});
-        
-        // Fire parallel request, as queued promises won't execute on unload
-        fetch('/api/supabase/stats/record', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room_code: roomCode }),
           keepalive: true,
         }).catch(() => {});
       }
@@ -887,13 +883,6 @@ export default function ChessGame({
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ room_code: roomCode, updates: { board_state: nextBoard, turn: getNextPlayer(piece.player), status: 'finished', winner: piece.player, called_square: null, call_timer: null, move_history: nextHistory } }),
-        })
-        .then(() => {
-          fetch('/api/supabase/stats/record', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room_code: roomCode })
-          }).catch(err => console.error('Failed to record stats', err));
         })
         .catch(() => setOnlineStatus('Unable to sync finished game state.'));
       }

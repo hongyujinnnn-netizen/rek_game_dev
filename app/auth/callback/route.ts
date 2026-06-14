@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { setAuthCookies } from '@/lib/leungRekAuth';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -27,8 +28,9 @@ export async function GET(request: Request) {
         },
       }
     );
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && data?.session) {
+      await setAuthCookies(data.session.access_token, data.session.refresh_token);
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
