@@ -240,7 +240,7 @@ export default function PortalPage() {
               
               <div className="text-center mb-2">
                 <p className="text-[#9CA3AF] text-[14px]">
-                  We've sent a 6-digit confirmation code to:
+                  We've sent an 8-digit confirmation code to:
                 </p>
                 <p className="text-white font-bold text-[15px] mt-1">{otpEmail}</p>
               </div>
@@ -255,12 +255,12 @@ export default function PortalPage() {
                 autoComplete="one-time-code"
                 label="Confirmation Code"
                 value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
               />
 
               <button
                 type="submit"
-                disabled={isVerifyOtpPending || otpCode.length !== 6}
+                disabled={isVerifyOtpPending || otpCode.length !== 8}
                 className="group relative mt-2 w-full h-[54px] flex justify-center items-center rounded-[13px] font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-gradient-to-r from-[#FFB300] to-[#FF6B00] overflow-hidden shadow-[0_6px_22px_rgba(255,107,0,0.28)] hover:shadow-[0_10px_30px_rgba(255,107,0,0.42)] active:scale-[0.985] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <span className="relative z-10 flex items-center gap-2">
