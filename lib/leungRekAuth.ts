@@ -147,7 +147,7 @@ export async function signInPlayer(email: string, password: string) {
 }
 
 export async function signUpPlayer(email: string, password: string, name: string) {
-  const payload = await supabaseRequest<SupabaseAuthResponse>('/auth/v1/signup', {
+  const payload = await supabaseRequest<SupabaseAuthResponse>('/auth/v1/signup?redirect_to=https://rek-game-dev.vercel.app/auth/callback', {
     body: JSON.stringify({
       email,
       password,
@@ -159,7 +159,32 @@ export async function signUpPlayer(email: string, password: string, name: string
   });
 
   if (!payload.access_token || !payload.refresh_token || !payload.user) {
-    throw new Error('Check your email to confirm your account before signing in.');
+    return {
+      requiresOtp: true,
+      email: payload.user?.email || email,
+    };
+  }
+
+  return {
+    requiresOtp: false,
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token,
+    session: await readPlayerProfile(payload.access_token, payload.user),
+  };
+}
+
+export async function verifyPlayerOtp(email: string, token: string) {
+  const payload = await supabaseRequest<SupabaseAuthResponse>('/auth/v1/verify', {
+    body: JSON.stringify({
+      type: 'signup',
+      email,
+      token,
+    }),
+    method: 'POST',
+  });
+
+  if (!payload.access_token || !payload.refresh_token || !payload.user) {
+    throw new Error('Verification failed. Invalid or expired code.');
   }
 
   return {

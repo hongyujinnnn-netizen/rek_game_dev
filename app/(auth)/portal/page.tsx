@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { loginAction, registerAction } from '@/app/actions/auth';
+import { loginAction, registerAction, verifyOtpAction } from '@/app/actions/auth';
 import { createClient } from '@supabase/supabase-js';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -16,12 +16,20 @@ export default function PortalPage() {
 
   const [loginState, formLoginAction, isLoginPending] = useActionState(loginAction, null);
   const [registerState, formRegisterAction, isRegisterPending] = useActionState(registerAction, null);
+  const [verifyOtpState, formVerifyOtpAction, isVerifyOtpPending] = useActionState(verifyOtpAction, null);
 
   const [clientError, setClientError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isDiscordLoading, setIsDiscordLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0); // 0-3
+  
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  
+  const [isOtpMode, setIsOtpMode] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -32,14 +40,27 @@ export default function PortalPage() {
 
   useEffect(() => {
     setClientError(null);
+    setFieldErrors({});
+    setTouched({});
     setFormData({ name: '', email: '', password: '', confirmPassword: '' });
     setPasswordStrength(0);
   }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === 'login' && loginState?.error) setClientError(loginState.error);
-    if (activeTab === 'register' && registerState?.error) setClientError(registerState.error);
+    if (activeTab === 'register') {
+      if (registerState?.error) setClientError(registerState.error);
+      if (registerState?.requiresOtp && registerState?.email) {
+        setIsOtpMode(true);
+        setOtpEmail(registerState.email);
+        setClientError(null);
+      }
+    }
   }, [loginState, registerState, activeTab]);
+
+  useEffect(() => {
+    if (verifyOtpState?.error) setClientError(verifyOtpState.error);
+  }, [verifyOtpState]);
 
   const calcStrength = (pw: string) => {
     let score = 0;
@@ -49,45 +70,75 @@ export default function PortalPage() {
     return score;
   };
 
+  const validateField = (name: string, value: string, currentTab: 'login' | 'register', allValues: typeof formData) => {
+    let error = '';
+    if (name === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!value) error = 'Email is required';
+      else if (!emailRegex.test(value)) error = 'Invalid email address';
+    } else if (name === 'password') {
+      if (!value) error = 'Password is required';
+      else if (currentTab === 'register' && value.length < 6) error = 'Password must be at least 6 characters';
+    } else if (name === 'name' && currentTab === 'register') {
+      if (!value) error = 'Display name is required';
+      else if (value.trim().length < 3) error = 'Display name must be at least 3 characters';
+    } else if (name === 'confirmPassword' && currentTab === 'register') {
+      if (!value) error = 'Confirm password is required';
+      else if (value !== allValues.password) error = 'Passwords do not match';
+    }
+    return error;
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validateField(name, value, activeTab, formData);
+    setFieldErrors(prev => ({ ...prev, [name]: error }));
+  };
+
   const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const newFormData = { ...formData, [name]: value };
+    setFormData(newFormData);
     if (clientError) setClientError(null);
     if (name === 'password') setPasswordStrength(value ? calcStrength(value) : 0);
+
+    // Validate on change if field was already touched/errored
+    if (touched[name] || fieldErrors[name]) {
+      const error = validateField(name, value, activeTab, newFormData);
+      setFieldErrors(prev => ({ ...prev, [name]: error }));
+    }
+    // Re-validate confirm password if password changes
+    if (name === 'password' && (touched['confirmPassword'] || fieldErrors['confirmPassword'])) {
+      const cpError = validateField('confirmPassword', newFormData.confirmPassword, activeTab, newFormData);
+      setFieldErrors(prev => ({ ...prev, confirmPassword: cpError }));
+    }
   };
 
   const handleLoginSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    if (!formData.email || !formData.email.includes('@')) {
+    const newErrors: Record<string, string> = {};
+    newErrors.email = validateField('email', formData.email, 'login', formData);
+    newErrors.password = validateField('password', formData.password, 'login', formData);
+    
+    if (newErrors.email || newErrors.password) {
       e.preventDefault();
-      setClientError('Please enter a valid email address.');
-      return;
-    }
-    if (!formData.password) {
-      e.preventDefault();
-      setClientError('Password is required.');
+      setFieldErrors(newErrors);
+      setTouched({ email: true, password: true });
       return;
     }
   };
 
   const handleRegisterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    if (!formData.name || formData.name.trim().length < 3) {
+    const newErrors: Record<string, string> = {};
+    newErrors.name = validateField('name', formData.name, 'register', formData);
+    newErrors.email = validateField('email', formData.email, 'register', formData);
+    newErrors.password = validateField('password', formData.password, 'register', formData);
+    newErrors.confirmPassword = validateField('confirmPassword', formData.confirmPassword, 'register', formData);
+
+    if (newErrors.name || newErrors.email || newErrors.password || newErrors.confirmPassword) {
       e.preventDefault();
-      setClientError('Display name must be at least 3 characters.');
-      return;
-    }
-    if (!formData.email || !formData.email.includes('@')) {
-      e.preventDefault();
-      setClientError('Please enter a valid email address.');
-      return;
-    }
-    if (!formData.password || formData.password.length < 6) {
-      e.preventDefault();
-      setClientError('Password must be at least 6 characters.');
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      e.preventDefault();
-      setClientError('Passwords do not match.');
+      setFieldErrors(newErrors);
+      setTouched({ name: true, email: true, password: true, confirmPassword: true });
       return;
     }
   };
@@ -178,6 +229,57 @@ export default function PortalPage() {
           </div>
 
           {/* Form */}
+          {isOtpMode ? (
+            <form className="flex flex-col gap-4" action={formVerifyOtpAction}>
+              {clientError && (
+                <div className="flex items-start gap-3 bg-red-500/[0.08] border border-red-500/25 text-red-400 text-[13.5px] font-medium px-4 py-3 rounded-[12px]">
+                  <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-red-400" />
+                  <span>{clientError}</span>
+                </div>
+              )}
+              
+              <div className="text-center mb-2">
+                <p className="text-[#9CA3AF] text-[14px]">
+                  We've sent a 6-digit confirmation code to:
+                </p>
+                <p className="text-white font-bold text-[15px] mt-1">{otpEmail}</p>
+              </div>
+
+              <input type="hidden" name="email" value={otpEmail} />
+
+              <FloatingInput
+                icon={<Lock size={18} />}
+                type="text"
+                name="token"
+                id="token"
+                autoComplete="one-time-code"
+                label="Confirmation Code"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              />
+
+              <button
+                type="submit"
+                disabled={isVerifyOtpPending || otpCode.length !== 6}
+                className="group relative mt-2 w-full h-[54px] flex justify-center items-center rounded-[13px] font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-gradient-to-r from-[#FFB300] to-[#FF6B00] overflow-hidden shadow-[0_6px_22px_rgba(255,107,0,0.28)] hover:shadow-[0_10px_30px_rgba(255,107,0,0.42)] active:scale-[0.985] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  {isVerifyOtpPending ? 'Verifying…' : 'Verify Account'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOtpMode(false);
+                  setClientError(null);
+                }}
+                className="mt-3 text-[13px] text-[#6B7280] hover:text-white transition-colors duration-200"
+              >
+                ← Back to sign up
+              </button>
+            </form>
+          ) : (
           <form
             className="flex flex-col gap-4"
             action={activeTab === 'login' ? formLoginAction : formRegisterAction}
@@ -209,6 +311,8 @@ export default function PortalPage() {
                 label="Display Name"
                 value={formData.name}
                 onChange={handleFieldChange}
+                onBlur={handleBlur}
+                error={activeTab === 'register' ? fieldErrors.name : undefined}
               />
             </div>
 
@@ -222,6 +326,8 @@ export default function PortalPage() {
               label="Email Address"
               value={formData.email}
               onChange={handleFieldChange}
+              onBlur={handleBlur}
+              error={fieldErrors.email}
             />
 
             {/* Password */}
@@ -235,6 +341,8 @@ export default function PortalPage() {
                 label="Password"
                 value={formData.password}
                 onChange={handleFieldChange}
+                onBlur={handleBlur}
+                error={fieldErrors.password}
                 suffix={
                   <button
                     type="button"
@@ -284,6 +392,8 @@ export default function PortalPage() {
                 label="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleFieldChange}
+                onBlur={handleBlur}
+                error={activeTab === 'register' ? fieldErrors.confirmPassword : undefined}
                 suffix={
                   formData.confirmPassword.length > 0 ? (
                     passwordsMatch ? (
@@ -346,6 +456,7 @@ export default function PortalPage() {
               </span>
             </button>
           </form>
+          )}
 
           {/* Divider */}
           <div className="relative my-7">
@@ -410,33 +521,41 @@ interface FloatingInputProps {
   autoComplete?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  error?: string;
 }
 
-function FloatingInput({ icon, suffix, label, ...inputProps }: FloatingInputProps) {
+function FloatingInput({ icon, suffix, label, error, ...inputProps }: FloatingInputProps) {
   return (
-    <div className="relative group">
-      <div className="absolute left-[14px] top-1/2 -translate-y-1/2 text-[#4B5563] group-focus-within:text-[#FFB300] transition-colors duration-200 pointer-events-none z-10">
-        {icon}
-      </div>
-      <input
-        {...inputProps}
-        placeholder=" "
-        className="peer w-full h-[54px] bg-white/[0.025] border border-white/[0.08] rounded-[12px] pl-[42px] pr-[42px] pt-[22px] pb-[6px] text-[14.5px] text-white font-medium focus:outline-none focus:border-[#FFB300]/55 focus:bg-[#FFB300]/[0.025] transition-all duration-200 autofill:bg-transparent"
-      />
-      <label
-        htmlFor={inputProps.id}
-        className="absolute left-[42px] top-1/2 -translate-y-1/2 text-[14px] text-[#4B5563] pointer-events-none transition-all duration-200
-          peer-focus:top-[8px] peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:text-[#FFB300] peer-focus:font-semibold peer-focus:tracking-wide
-          peer-[:not(:placeholder-shown)]:top-[8px] peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-[#6B7280] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-wide
-          peer-[&:-webkit-autofill]:top-[8px] peer-[&:-webkit-autofill]:translate-y-0 peer-[&:-webkit-autofill]:text-[10px] peer-[&:-webkit-autofill]:text-[#6B7280] peer-[&:-webkit-autofill]:font-semibold peer-[&:-webkit-autofill]:tracking-wide"
-      >
-        {label}
-      </label>
-      {suffix && (
-        <div className="absolute right-[14px] top-1/2 -translate-y-1/2 z-10">
-          {suffix}
+    <div className="relative group flex flex-col w-full">
+      <div className="relative w-full">
+        <div className={`absolute left-[14px] top-1/2 -translate-y-1/2 transition-colors duration-200 pointer-events-none z-10 ${error ? 'text-red-400' : 'text-[#4B5563] group-focus-within:text-[#FFB300]'}`}>
+          {icon}
         </div>
-      )}
+        <input
+          {...inputProps}
+          placeholder=" "
+          className={`peer w-full h-[54px] bg-white/[0.025] border rounded-[12px] pl-[42px] pr-[42px] pt-[22px] pb-[6px] text-[14.5px] text-white font-medium focus:outline-none transition-all duration-200 autofill:bg-transparent ${error ? 'border-red-500/50 focus:border-red-500/80 focus:bg-red-500/[0.025]' : 'border-white/[0.08] focus:border-[#FFB300]/55 focus:bg-[#FFB300]/[0.025]'}`}
+        />
+        <label
+          htmlFor={inputProps.id}
+          className={`absolute left-[42px] top-1/2 -translate-y-1/2 text-[14px] pointer-events-none transition-all duration-200
+            peer-focus:top-[8px] peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:font-semibold peer-focus:tracking-wide
+            peer-[:not(:placeholder-shown)]:top-[8px] peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-wide
+            peer-[&:-webkit-autofill]:top-[8px] peer-[&:-webkit-autofill]:translate-y-0 peer-[&:-webkit-autofill]:text-[10px] peer-[&:-webkit-autofill]:font-semibold peer-[&:-webkit-autofill]:tracking-wide
+            ${error ? 'text-red-400 peer-focus:text-red-400 peer-[:not(:placeholder-shown)]:text-red-400 peer-[&:-webkit-autofill]:text-red-400' : 'text-[#4B5563] peer-focus:text-[#FFB300] peer-[:not(:placeholder-shown)]:text-[#6B7280] peer-[&:-webkit-autofill]:text-[#6B7280]'}`}
+        >
+          {label}
+        </label>
+        {suffix && (
+          <div className="absolute right-[14px] top-1/2 -translate-y-1/2 z-10">
+            {suffix}
+          </div>
+        )}
+      </div>
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${error ? 'max-h-[24px] opacity-100 mt-1.5' : 'max-h-0 opacity-0 mt-0'}`}>
+        <p className="text-red-400 text-[12.5px] font-medium ml-1 flex items-center gap-1.5"><AlertCircle size={14} /> {error}</p>
+      </div>
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function Footer() {
         </div>
         <div className={styles.links}>
           <a href="#" className={styles.link}>About</a>
-          <a href="#" className={styles.link}>GitHub</a>
+          <a href="https://github.com/hongyujinnnn-netizen/rek_game_dev.git" className={styles.link}>GitHub</a>
           <a href="#" className={styles.link}>Privacy</a>
         </div>
       </div>
