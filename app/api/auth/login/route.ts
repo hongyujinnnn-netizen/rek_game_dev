@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAuthConfigured, setAuthCookies, signInPlayer } from '@/lib/leungRekAuth';
+import { isAuthConfigured, setSessionCookies, signInPlayer } from '@/lib/leungRekAuth';
 
 export async function POST(request: Request) {
   if (!isAuthConfigured()) {
@@ -16,9 +16,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { accessToken, refreshToken, session } = await signInPlayer(email, password);
+    const { accessToken, session } = await signInPlayer(email, password);
 
-    await setAuthCookies(accessToken, refreshToken);
+    await setSessionCookies(session, accessToken);
 
     return NextResponse.json({ session });
   } catch (error) {

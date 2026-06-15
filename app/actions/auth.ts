@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { signInPlayer, signUpPlayer, setAuthCookies, verifyPlayerOtp } from '@/lib/leungRekAuth';
+import { signInPlayer, signUpPlayer, setSessionCookies, verifyPlayerOtp } from '@/lib/leungRekAuth';
 
 export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
@@ -12,8 +12,8 @@ export async function loginAction(prevState: any, formData: FormData) {
   }
 
   try {
-    const { accessToken, refreshToken } = await signInPlayer(email, password);
-    await setAuthCookies(accessToken, refreshToken);
+    const { accessToken, session } = await signInPlayer(email, password);
+    await setSessionCookies(session, accessToken);
   } catch (error: any) {
     return { error: error.message || 'Failed to login' };
   }
@@ -40,7 +40,7 @@ export async function registerAction(prevState: any, formData: FormData) {
     if (result.requiresOtp) {
       return { requiresOtp: true, email: result.email };
     }
-    await setAuthCookies(result.accessToken!, result.refreshToken!);
+    await setSessionCookies(result.session!, result.accessToken!);
   } catch (error: any) {
     return { error: error.message || 'Failed to register' };
   }
@@ -57,8 +57,8 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
   }
 
   try {
-    const { accessToken, refreshToken } = await verifyPlayerOtp(email, token);
-    await setAuthCookies(accessToken, refreshToken);
+    const { accessToken, session } = await verifyPlayerOtp(email, token);
+    await setSessionCookies(session, accessToken);
   } catch (error: any) {
     return { error: error.message || 'Verification failed.' };
   }

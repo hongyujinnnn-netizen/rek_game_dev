@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { readCurrentPlayerSession } from '@/lib/leungRekAuth';
+import { getAuthenticatedPlayer, getSupabaseToken } from '@/lib/apiAuth';
 
 export async function GET() {
   try {
-    const session = await readCurrentPlayerSession();
+    const session = await getAuthenticatedPlayer();
     if (!session || !session.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get('leung_rek_access_token')?.value;
+    const token = await getSupabaseToken();
 
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { getAuthenticatedPlayer, getSupabaseToken } from '@/lib/apiAuth';
 
 export async function PATCH(request: Request) {
   try {
+    // Authentication gate
+    const player = await getAuthenticatedPlayer();
+    if (!player) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { room_code, updates } = body;
 
@@ -11,8 +17,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'room_code and updates required' }, { status: 400 });
     }
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get('leung_rek_access_token')?.value;
+    const token = await getSupabaseToken();
 
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

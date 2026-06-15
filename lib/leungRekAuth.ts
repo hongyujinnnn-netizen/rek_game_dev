@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
+import { signSessionToken, verifySessionToken } from '@/lib/jwt';
 
-const ACCESS_TOKEN_COOKIE = 'leung_rek_access_token';
-const REFRESH_TOKEN_COOKIE = 'leung_rek_refresh_token';
+const SESSION_COOKIE = 'leung_rek_session';
+const SB_TOKEN_COOKIE = 'leung_rek_sb_token';
 
 type SupabaseUser = {
   id: string;
@@ -194,39 +195,69 @@ export async function verifyPlayerOtp(email: string, token: string) {
   };
 }
 
+// ─── JWT-based Session Cookie Management ──────────────────────────────────────
+
+/**
+ * Reads the current player session from the JWT cookie.
+ * No Supabase API call needed — session is verified locally.
+ */
 export async function readCurrentPlayerSession(): Promise<PlayerSession | null> {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
 
-  if (!accessToken) {
+  if (!token) {
     return null;
   }
 
-  const user = await supabaseRequest<SupabaseUser>('/auth/v1/user', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  return readPlayerProfile(accessToken, user);
+  return verifySessionToken(token);
 }
 
-export async function setAuthCookies(accessToken: string, refreshToken: string) {
+/**
+ * Sets both the JWT session cookie and the Supabase access token cookie.
+ * The JWT contains the player session data for fast local verification.
+ * The Supabase token is kept separately for database operations.
+ */
+export async function setSessionCookies(session: PlayerSession, supabaseAccessToken: string) {
   const cookieStore = await cookies();
+  const jwt = await signSessionToken(session);
+
   const cookieOptions = {
     httpOnly: true,
     path: '/',
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
   };
 
-  cookieStore.set(ACCESS_TOKEN_COOKIE, accessToken, cookieOptions);
-  cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, cookieOptions);
+  cookieStore.set(SESSION_COOKIE, jwt, cookieOptions);
+  cookieStore.set(SB_TOKEN_COOKIE, supabaseAccessToken, cookieOptions);
 }
 
-export async function clearAuthCookies() {
+/**
+ * Clears both the JWT session cookie and the Supabase token cookie.
+ */
+export async function clearSessionCookies() {
   const cookieStore = await cookies();
 
-  cookieStore.delete(ACCESS_TOKEN_COOKIE);
-  cookieStore.delete(REFRESH_TOKEN_COOKIE);
+  cookieStore.delete(SESSION_COOKIE);
+  cookieStore.delete(SB_TOKEN_COOKIE);
 }
+
+// ─── Legacy aliases (for backward compatibility during migration) ─────────────
+
+/** @deprecated Use setSessionCookies instead */
+export const setAuthCookies = async (accessToken: string, _refreshToken: string) => {
+  // During the transition, if called with just tokens (old pattern),
+  // we need to fetch the session first. This shouldn't normally be called
+  // in the new flow.
+  const user = await supabaseRequest<SupabaseUser>('/auth/v1/user', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  const session = await readPlayerProfile(accessToken, user);
+  await setSessionCookies(session, accessToken);
+};
+
+/** @deprecated Use clearSessionCookies instead */
+export const clearAuthCookies = clearSessionCookies;

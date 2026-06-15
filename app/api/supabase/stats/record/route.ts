@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { readCurrentPlayerSession } from '@/lib/leungRekAuth';
+import { getAuthenticatedPlayer, getSupabaseToken } from '@/lib/apiAuth';
 
 export async function POST(request: Request) {
   try {
@@ -12,13 +11,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'room_code required' }, { status: 400 });
     }
 
-    const session = await readCurrentPlayerSession();
+    const session = await getAuthenticatedPlayer();
     if (!session || !session.id) {
       return NextResponse.json({ message: 'Guest stats not recorded' }, { status: 200 });
     }
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get('leung_rek_access_token')?.value;
+    const token = await getSupabaseToken();
 
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

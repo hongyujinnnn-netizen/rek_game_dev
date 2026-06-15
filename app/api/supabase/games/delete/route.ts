@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { readCurrentPlayerSession } from '@/lib/leungRekAuth';
+import { getAuthenticatedPlayer, getSupabaseToken } from '@/lib/apiAuth';
 
 export async function POST(request: Request) {
   try {
+    // Authentication gate
+    const player = await getAuthenticatedPlayer();
+    if (!player) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { room_code } = body;
 
@@ -12,8 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'room_code required' }, { status: 400 });
     }
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get('leung_rek_access_token')?.value;
+    const token = await getSupabaseToken();
 
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,6 +30,17 @@ export async function POST(request: Request) {
         }
       } : {}
     );
+
+    // Authorization: verify the user is a player in this game before deleting
+    const { data: game } = await supabase
+      .from('games')
+      .select('player_id_red, player_id_blue')
+      .eq('room_code', room_code)
+      .single();
+
+    if (game && game.player_id_red !== player.id && game.player_id_blue !== player.id) {
+      return NextResponse.json({ error: 'You are not a player in this game' }, { status: 403 });
+    }
 
     const { data: deletedData, error } = await supabase
       .from('games')

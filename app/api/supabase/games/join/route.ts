@@ -1,18 +1,26 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { getAuthenticatedPlayer, getSupabaseToken } from '@/lib/apiAuth';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { room_code, playerName, playerId } = body;
-
-    if (!room_code || !playerId) {
-      return NextResponse.json({ error: 'room_code and playerId required' }, { status: 400 });
+    // Authentication gate
+    const player = await getAuthenticatedPlayer();
+    if (!player) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get('leung_rek_access_token')?.value;
+    const body = await request.json();
+    const { room_code, playerName } = body;
+
+    // Use authenticated player's ID instead of trusting the request body
+    const playerId = player.id;
+
+    if (!room_code) {
+      return NextResponse.json({ error: 'room_code required' }, { status: 400 });
+    }
+
+    const token = await getSupabaseToken();
 
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +37,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from('games')
       .update({
-        player_blue: playerName ?? null,
+        player_blue: playerName ?? player.name,
         player_id_blue: playerId,
         status: 'in_progress',
       })

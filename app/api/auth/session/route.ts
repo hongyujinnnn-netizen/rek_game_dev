@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAuthConfigured, readCurrentPlayerSession, clearAuthCookies } from '@/lib/leungRekAuth';
+import { isAuthConfigured, readCurrentPlayerSession, clearSessionCookies } from '@/lib/leungRekAuth';
 
 export async function GET() {
   if (!isAuthConfigured()) {
@@ -13,7 +13,7 @@ export async function GET() {
     });
   } catch (error) {
     // Clear cookies so an expired JWT doesn't linger and crash other API routes
-    await clearAuthCookies();
+    await clearSessionCookies();
     
     return NextResponse.json(
       {

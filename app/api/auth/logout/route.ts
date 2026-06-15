@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { clearAuthCookies } from '@/lib/leungRekAuth';
+import { clearSessionCookies } from '@/lib/leungRekAuth';
 
 export async function POST() {
-  await clearAuthCookies();
+  await clearSessionCookies();
 
   return NextResponse.json({ ok: true });
 }
