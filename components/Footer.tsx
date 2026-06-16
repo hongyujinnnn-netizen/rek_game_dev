@@ -14,8 +14,12 @@ export default function Footer() {
           <p className={styles.copyright}>© {currentYear} — Traditional strategy reimagined</p>
         </div>
         <div className={styles.links}>
-          <a href="#" className={styles.link}>About</a>
-          <a href="https://github.com/hongyujinnnn-netizen/rek_game_dev.git" className={styles.link}>GitHub</a>
+          <a href="https://t.me/leungrek" className={styles.link} target="_blank" rel="noopener noreferrer">
+            Telegram
+          </a>
+          <a href="https://github.com/hongyujinnnn-netizen/rek_game_dev.git" className={styles.link} target="_blank" rel="noopener noreferrer">
+            GitHub
+          </a>
           <a href="#" className={styles.link}>Privacy</a>
         </div>
       </div>
