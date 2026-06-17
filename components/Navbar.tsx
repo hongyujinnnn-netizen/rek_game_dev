@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import styles from './Navbar.module.css';
 
@@ -14,6 +15,7 @@ type PlayerSession = {
 };
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [session, setSession] = useState<PlayerSession | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -65,7 +67,7 @@ export default function Navbar() {
             </button>
           </div>
         ) : (
-          <Link href="/portal" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>
+          <Link href="/portal" className={`${styles.navLink} ${pathname === '/portal' ? 'text-[#FFB300] drop-shadow-[0_0_8px_rgba(255,179,0,0.5)]' : ''}`} onClick={() => setMobileMenuOpen(false)}>
             Sign In
           </Link>
         )}

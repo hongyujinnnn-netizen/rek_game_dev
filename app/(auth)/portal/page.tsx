@@ -145,19 +145,33 @@ export default function PortalPage() {
   };
 
   const handleDiscordLogin = async () => {
-    setIsDiscordLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
-    });
+    try {
+      setIsDiscordLoading(true);
+      setClientError(null);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: { redirectTo: `${window.location.origin}/auth/callback` }
+      });
+      if (error) throw error;
+    } catch (e: any) {
+      setClientError(e.message || 'Failed to initialize Discord login');
+      setIsDiscordLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
-    setIsGoogleLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
-    });
+    try {
+      setIsGoogleLoading(true);
+      setClientError(null);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback` }
+      });
+      if (error) throw error;
+    } catch (e: any) {
+      setClientError(e.message || 'Failed to initialize Google login');
+      setIsGoogleLoading(false);
+    }
   };
 
   const isPending = isLoginPending || isRegisterPending;
@@ -192,7 +206,7 @@ export default function PortalPage() {
         {/* Gradient border */}
         <div className="absolute -inset-[1px] bg-gradient-to-b from-[#FFB300]/25 via-[#FFB300]/5 to-transparent rounded-[22px] pointer-events-none" />
 
-        <div className="bg-[#0C0C12]/90 backdrop-blur-2xl border border-white/[0.06] rounded-[22px] p-8 sm:p-10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9),0_0_60px_-15px_rgba(255,179,0,0.07)]">
+        <div className="bg-[#0C0C12]/90 backdrop-blur-2xl border border-[#FFB300]/20 rounded-[22px] p-8 sm:p-10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9),0_0_60px_-15px_rgba(255,179,0,0.07)]">
 
           {/* Header */}
           <div className="flex flex-col items-center mb-8">
@@ -229,7 +243,7 @@ export default function PortalPage() {
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 relative z-10 h-full text-[13px] font-bold rounded-full tracking-widest uppercase transition-colors duration-300 ${
-                  activeTab === tab ? 'text-white' : 'text-[#6B7280] hover:text-[#9CA3AF]'
+                  activeTab === tab ? 'text-[#FFB300]' : 'text-[#6B7280] hover:text-[#9CA3AF]'
                 }`}
               >
                 {tab}
@@ -447,7 +461,7 @@ export default function PortalPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="group relative mt-1 w-full h-[54px] flex justify-center items-center rounded-[13px] font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-gradient-to-r from-[#FFB300] to-[#FF6B00] overflow-hidden shadow-[0_6px_22px_rgba(255,107,0,0.28)] hover:shadow-[0_10px_30px_rgba(255,107,0,0.42)] active:scale-[0.985] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="group relative mt-4 w-full h-[54px] flex justify-center items-center rounded-[13px] font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-gradient-to-r from-[#FFB300] to-[#FF6B00] overflow-hidden shadow-[0_6px_22px_rgba(255,107,0,0.28)] hover:shadow-[0_10px_30px_rgba(255,107,0,0.42)] active:scale-[0.985] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-[-101%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10 flex items-center gap-2">
@@ -468,7 +482,7 @@ export default function PortalPage() {
           )}
 
           {/* Divider */}
-          <div className="relative my-7">
+          <div className="relative mt-10 mb-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/[0.07]" />
             </div>
@@ -505,7 +519,7 @@ export default function PortalPage() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isDiscordLoading || isGoogleLoading}
-              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-white hover:bg-gray-100 rounded-[13px] text-gray-900 font-bold text-[14px] tracking-wide transition-all duration-200 hover:shadow-[0_0_24px_rgba(255,255,255,0.35)] hover:-translate-y-0.5 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-white hover:bg-gray-100 border border-[#3F3F46] rounded-[13px] text-gray-900 font-bold text-[14px] tracking-wide transition-all duration-200 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:-translate-y-0.5 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isGoogleLoading ? (
                 <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -570,15 +584,15 @@ function FloatingInput({ icon, suffix, label, error, ...inputProps }: FloatingIn
         <input
           {...inputProps}
           placeholder=" "
-          className={`peer w-full h-[54px] bg-white/[0.025] border rounded-[12px] pl-[42px] pr-[42px] pt-[22px] pb-[6px] text-[14.5px] text-white font-medium focus:outline-none transition-all duration-200 autofill:bg-transparent ${error ? 'border-red-500/50 focus:border-red-500/80 focus:bg-red-500/[0.025]' : 'border-white/[0.08] focus:border-[#FFB300]/55 focus:bg-[#FFB300]/[0.025]'}`}
+          className={`peer w-full h-[54px] bg-white/[0.025] border rounded-[12px] pl-[42px] pr-[42px] pt-[22px] pb-[6px] text-[14.5px] text-white font-medium focus:outline-none transition-all duration-200 autofill:bg-transparent ${error ? 'border-red-500/50 focus:border-red-500/80 focus:border-l-[3px] focus:border-l-red-500 focus:bg-red-500/[0.025]' : 'border-white/[0.08] focus:border-[#FFB300]/55 focus:border-l-[3px] focus:border-l-[#FFB300] focus:bg-[#FFB300]/[0.025]'}`}
         />
         <label
           htmlFor={inputProps.id}
-          className={`absolute left-[42px] top-1/2 -translate-y-1/2 text-[14px] pointer-events-none transition-all duration-200
+          className={`absolute left-[42px] pointer-events-none transition-all duration-200
+            top-[8px] translate-y-0 text-[10px] font-semibold tracking-wide
+            peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[14px] peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal
             peer-focus:top-[8px] peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:font-semibold peer-focus:tracking-wide
-            peer-[:not(:placeholder-shown)]:top-[8px] peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:tracking-wide
-            peer-[&:-webkit-autofill]:top-[8px] peer-[&:-webkit-autofill]:translate-y-0 peer-[&:-webkit-autofill]:text-[10px] peer-[&:-webkit-autofill]:font-semibold peer-[&:-webkit-autofill]:tracking-wide
-            ${error ? 'text-red-400 peer-focus:text-red-400 peer-[:not(:placeholder-shown)]:text-red-400 peer-[&:-webkit-autofill]:text-red-400' : 'text-[#4B5563] peer-focus:text-[#FFB300] peer-[:not(:placeholder-shown)]:text-[#6B7280] peer-[&:-webkit-autofill]:text-[#6B7280]'}`}
+            ${error ? 'text-red-400' : 'text-[#6B7280] peer-placeholder-shown:text-[#4B5563] peer-focus:text-[#FFB300]'}`}
         >
           {label}
         </label>
