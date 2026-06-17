@@ -187,6 +187,12 @@ export default function PortalPage() {
 
   return (
     <div className="min-h-screen bg-[#0A0A10] text-white flex items-center justify-center relative selection:bg-[#FFB300]/30 selection:text-[#FFB300]">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}} />
       
       {/* Navbar overlay */}
       <div className="absolute top-0 w-full z-50 pointer-events-none">
@@ -196,7 +202,7 @@ export default function PortalPage() {
       </div>
 
       {/* The Portal */}
-      <div className="w-full flex flex-col items-center justify-center p-6 sm:p-12 lg:p-20 relative z-10 pt-32">
+      <div className="w-full flex flex-col items-center justify-center p-6 sm:p-12 lg:p-20 relative z-10 pt-32" style={{ animation: 'fade-in-up 0.4s ease-out forwards' }}>
         <div className="w-full max-w-[440px]">
           
           {/* Header Mobile / Title */}
@@ -217,10 +223,11 @@ export default function PortalPage() {
             role="tablist"
           >
             <div
-              className="absolute top-1.5 bottom-1.5 rounded-[8px] bg-[#1C1C26] border border-[#FFB300]/30 shadow-[0_0_12px_rgba(255,179,0,0.12)] transition-all duration-300 ease-out z-0"
+              className="absolute top-1.5 bottom-1.5 rounded-[8px] bg-[#1C1C26] border border-[#FFB300]/30 shadow-[0_0_12px_rgba(255,179,0,0.12)] transition-transform duration-300 ease-out z-0"
               style={{
-                left: activeTab === 'login' ? '6px' : 'calc(50% + 3px)',
-                width: 'calc(50% - 9px)',
+                transform: activeTab === 'login' ? 'translateX(0)' : 'translateX(100%)',
+                width: 'calc(50% - 6px)',
+                left: '6px'
               }}
             />
             {(['login', 'register'] as const).map(tab => (
@@ -451,14 +458,14 @@ export default function PortalPage() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="peer sr-only"
                     />
-                    <div className="w-full h-full border border-[#4B5563] rounded-[4px] bg-transparent peer-checked:bg-[#FFB300] peer-checked:border-[#FFB300] transition-colors group-hover:border-[#FFB300]/50 peer-focus-visible:ring-2 peer-focus-visible:ring-[#FFB300] peer-focus-visible:ring-offset-1 peer-focus-visible:ring-offset-[#0A0A10]" />
+                    <div className="w-full h-full border border-white/20 rounded-[4px] bg-transparent peer-checked:bg-[#FFB300] peer-checked:border-[#FFB300] transition-colors group-hover:border-[#FFB300]/50 peer-focus-visible:ring-2 peer-focus-visible:ring-[#FFB300] peer-focus-visible:ring-offset-1 peer-focus-visible:ring-offset-[#0A0A10]" />
                     <Check size={12} className="absolute text-[#130800] opacity-0 peer-checked:opacity-100 transition-opacity" strokeWidth={3} />
                   </div>
                   <span className="text-[14px] text-[#9CA3AF] group-hover:text-white transition-colors">Remember me</span>
                 </label>
                 <a
                   href="/forgot-password"
-                  className="text-[14px] text-[#6B7280] hover:text-[#FFB300] transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FFB300] rounded"
+                  className="text-[13px] text-[#4B5563] hover:text-white transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FFB300] rounded"
                 >
                   Forgot password?
                 </a>
@@ -469,7 +476,7 @@ export default function PortalPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="group relative mt-2 w-full h-[56px] flex justify-center items-center rounded-xl font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-[#FFB300] overflow-hidden hover:bg-[#FFC033] shadow-[0_0_20px_rgba(255,179,0,0.15)] hover:shadow-[0_0_30px_rgba(255,179,0,0.3)] active:scale-[0.985] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB300]"
+              className="group relative mt-2 w-full h-[56px] flex justify-center items-center rounded-xl font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-[#FFB300] overflow-hidden hover:bg-[#FFC033] shadow-[0_0_20px_rgba(255,179,0,0.15)] hover:shadow-[0_0_24px_rgba(255,179,0,0.3)] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-[0_0_20px_rgba(255,179,0,0.15)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB300]"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-[-101%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10 flex items-center gap-2">
@@ -492,17 +499,14 @@ export default function PortalPage() {
           </form>
           )}
 
-          {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/[0.05]" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-[#0A0A10] px-4 text-[12px] font-bold uppercase tracking-[0.2em] text-[#4B5563]">
+            {/* Divider */}
+            <div className="flex items-center w-full my-8">
+              <div className="flex-1 border-t border-white/10" />
+              <span className="px-4 text-[12px] font-bold uppercase tracking-[0.2em] text-[#4B5563]">
                 Or Continue With
               </span>
+              <div className="flex-1 border-t border-white/10" />
             </div>
-          </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Discord */}
@@ -510,7 +514,7 @@ export default function PortalPage() {
               type="button"
               onClick={handleDiscordLogin}
               disabled={isDiscordLoading || isGoogleLoading}
-              className="group flex-1 relative h-[52px] flex items-center justify-center gap-3 bg-[#1C1C26] hover:bg-[#5865F2] border border-white/[0.04] hover:border-[#5865F2] overflow-hidden rounded-xl text-white font-bold text-[14px] tracking-wide transition-all duration-300 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5865F2]"
+              className="group flex-1 relative h-[52px] flex items-center justify-center gap-3 bg-[#1C1C26] hover:bg-white/[0.05] border border-white/[0.04] hover:border-white/20 overflow-hidden rounded-xl text-white font-bold text-[14px] tracking-wide transition-all duration-300 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/20"
             >
               <span className="relative z-10 flex items-center gap-3">
                 {isDiscordLoading ? (
@@ -532,7 +536,7 @@ export default function PortalPage() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isDiscordLoading || isGoogleLoading}
-              className="group flex-1 relative h-[52px] flex items-center justify-center gap-3 bg-[#1C1C26] hover:bg-white border border-white/[0.04] hover:border-white text-white hover:text-gray-900 overflow-hidden rounded-xl font-bold text-[14px] tracking-wide transition-all duration-300 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="group flex-1 relative h-[52px] flex items-center justify-center gap-3 bg-[#1C1C26] hover:bg-white/[0.05] border border-white/[0.04] hover:border-white/20 text-white overflow-hidden rounded-xl font-bold text-[14px] tracking-wide transition-all duration-300 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/20"
             >
               <span className="relative z-10 flex items-center gap-3">
                 {isGoogleLoading ? (
