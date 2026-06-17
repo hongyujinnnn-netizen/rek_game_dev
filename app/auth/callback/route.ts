@@ -68,6 +68,12 @@ export async function GET(request: Request) {
       };
 
       await setSessionCookies(session, data.session.access_token);
+      
+      // Check if setup is completed
+      if (!meta.setup_completed) {
+        return NextResponse.redirect(`${origin}/portal/setup?next=${encodeURIComponent(next)}`);
+      }
+      
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

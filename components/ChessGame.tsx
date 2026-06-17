@@ -284,6 +284,7 @@ export default function ChessGame({
   const [waitingForRematch, setWaitingForRematch] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
   const [waitingForOpponent, setWaitingForOpponent] = useState<boolean>(false);
+  const [opponentName, setOpponentName] = useState<string | null>(null);
   const [realtimeActive, setRealtimeActive] = useState(false);
   const channelRef = useRef<any>(null);
   const gameStateRef = useRef<GameState>(gameState);
@@ -320,14 +321,21 @@ export default function ChessGame({
 
         // Determine which color this client plays
         let myColor: Player | null = null;
+        let opponentNameStr: string | null = null;
         if (data.player_id_red === clientPlayerId) {
           myColor = 'red';
+          opponentNameStr = data.player_blue;
         } else if (data.player_id_blue === clientPlayerId) {
           myColor = 'blue';
+          opponentNameStr = data.player_red;
         }
 
         if (myColor && rematchRequests.some((m: any) => m.to !== myColor)) {
           setOpponentWantsRematch(true);
+        }
+
+        if (opponentNameStr !== undefined) {
+          setOpponentName(opponentNameStr);
         }
 
         // If the server says it's still this player's turn with an active call_timer,
@@ -631,6 +639,7 @@ export default function ChessGame({
     setCallTimer(null);
     setWaitingForRematch(false);
     setOpponentWantsRematch(false);
+    setOpponentName(null);
 
     if (isOnline && roomCode) {
       fetch('/api/supabase/games/update', {
@@ -962,6 +971,7 @@ export default function ChessGame({
   // Determine the opponent label for the top-right card
   const opponentLabel = (() => {
     if (!isOnline) return turn === 'red' ? 'Blue Player' : 'Red Player';
+    if (opponentName) return opponentName;
     if (!playerColor) return 'Opponent';
     return playerColor === 'red' ? 'Blue' : 'Red';
   })();

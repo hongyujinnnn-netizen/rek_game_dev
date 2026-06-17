@@ -65,3 +65,96 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
 
   redirect('/');
 }
+
+export async function completeSetupAction(prevState: any, formData: FormData) {
+  const name = formData.get('name') as string;
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+  const next = formData.get('next') as string || '/';
+
+  if (!name || !password || !confirmPassword) {
+    return { error: 'All fields are required.' };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: 'Passwords do not match.' };
+  }
+
+  const { createServerClient } = await import('@supabase/ssr');
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.delete({ name, ...options });
+        },
+      },
+    }
+  );
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: 'Not authenticated. Please log in again.' };
+  }
+
+  // Update auth user (password and metadata)
+  const { error: updateError } = await supabase.auth.updateUser({
+    password,
+    data: {
+      display_name: name,
+      setup_completed: true,
+    }
+  });
+
+  if (updateError) {
+    return { error: updateError.message || 'Failed to update account details.' };
+  }
+
+  // Update public profile
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ display_name: name })
+    .eq('id', user.id);
+
+  if (profileError) {
+    console.error('Failed to update profile:', profileError);
+  }
+
+  // Re-fetch session to get the new token and update cookies
+  const { data: sessionData } = await supabase.auth.getSession();
+  
+  if (sessionData.session) {
+    const { setSessionCookies } = await import('@/lib/leungRekAuth');
+    
+    // Create new player session
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('display_name, wins, losses, role')
+      .eq('id', user.id)
+      .single();
+
+    const sessionObj = {
+      id: user.id,
+      email: user.email ?? null,
+      name: profileData?.display_name ?? name,
+      wins: profileData?.wins ?? null,
+      losses: profileData?.losses ?? null,
+      role: profileData?.role ?? 'player',
+    };
+
+    await setSessionCookies(sessionObj, sessionData.session.access_token);
+  }
+
+  redirect(next);
+}

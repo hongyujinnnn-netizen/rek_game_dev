@@ -154,6 +154,7 @@ export async function signUpPlayer(email: string, password: string, name: string
       password,
       data: {
         display_name: name,
+        setup_completed: true,
       },
     }),
     method: 'POST',
