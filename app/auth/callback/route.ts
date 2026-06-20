@@ -5,10 +5,21 @@ import type { PlayerSession } from '@/lib/jwt';
 import { createClient } from '@/util/supabase/server';
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get('code');
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get('code');
   // if "next" is in param, use it as the redirect URL
-  const next = searchParams.get('next') ?? '/';
+  const next = requestUrl.searchParams.get('next') ?? '/';
+
+  let origin = 
+    process.env.NEXT_PUBLIC_SITE_URL ?? 
+    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ?? 
+    process.env.NEXT_PUBLIC_VERCEL_URL ?? 
+    process.env.VERCEL_URL ?? 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://rek-game-dev.vercel.app');
+    
+  if (!origin.startsWith('http')) {
+    origin = `https://${origin}`;
+  }
 
   if (code) {
     const cookieStore = await cookies();
