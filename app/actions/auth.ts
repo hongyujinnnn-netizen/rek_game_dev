@@ -173,6 +173,7 @@ export async function requestPasswordResetAction(prevState: any, formData: FormD
 
   // Determine the correct origin URL for the redirect
   let origin = 
+    process.env.NEXT_PUBLIC_SERVER_URL ?? 
     process.env.NEXT_PUBLIC_SITE_URL ?? 
     process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ?? 
     process.env.NEXT_PUBLIC_VERCEL_URL ?? 

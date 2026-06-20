@@ -146,9 +146,10 @@ export default function PortalPage() {
     try {
       setIsDiscordLoading(true);
       setClientError(null);
+      const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') || window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/` }
+        options: { redirectTo: `${serverUrl}/auth/callback?next=/` }
       });
       if (error) throw error;
     } catch (e: any) {
@@ -161,9 +162,10 @@ export default function PortalPage() {
     try {
       setIsGoogleLoading(true);
       setClientError(null);
+      const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') || window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/` }
+        options: { redirectTo: `${serverUrl}/auth/callback?next=/` }
       });
       if (error) throw error;
     } catch (e: any) {
