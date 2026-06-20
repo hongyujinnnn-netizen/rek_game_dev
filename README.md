@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ♟️ Challenger Portal
 
-## Getting Started
+<div align="center">
+  <h3>A Modern, Competitive Chess Platform</h3>
+  <p>Built with Next.js App Router, Supabase, and Tailwind CSS.</p>
+</div>
 
-First, run the development server:
+<br />
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Features
+
+- **Real-time Chess Matches**: Play chess seamlessly with instant move validation powered by `chess.js` and beautiful UI via `react-chessboard`.
+- **Modern Authentication**: Secure login and registration using Supabase Auth (PKCE flow enabled). Supports standard Email/Password with OTP, as well as Social Logins (Google, Discord).
+- **Stunning UI/UX**: Designed with a premium dark theme, glassmorphism effects, dynamic glows, and smooth micro-animations.
+- **Player Profiles**: Track your wins, losses, and roles seamlessly.
+- **Responsive Design**: Play on any device, fully optimized for both desktop and mobile views.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Backend & Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **Chess Engine**: [`chess.js`](https://github.com/jhlywa/chess.js) & [`react-chessboard`](https://github.com/Clariity/react-chessboard)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally on your machine.
+
+### Prerequisites
+
+Make sure you have [Node.js](https://nodejs.org/) (v18.17 or newer) and `npm` installed.
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/challenger-portal.git
+   cd challenger-portal
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Set up Environment Variables:**
+   Create a `.env.local` file in the root of the project and add your Supabase credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   ```
+
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open the App:**
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## 📂 Project Structure
+
+```text
+├── app/                  # Next.js App Router (Pages, Layouts, API Routes)
+│   ├── (auth)/           # Authentication pages (Portal, Setup, etc.)
+│   ├── actions/          # Server Actions for form submissions
+│   └── auth/callback/    # Supabase OAuth callback route
+├── components/           # Reusable UI components (Navbar, Footer, Inputs)
+├── lib/                  # Core utilities (Auth helpers, JWT, Game logic)
+├── util/                 # Config & utility wrappers (Supabase clients)
+└── public/               # Static assets (Images, icons, noise textures)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📜 License
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is open-source and available under the MIT License.

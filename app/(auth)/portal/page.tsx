@@ -3,13 +3,11 @@
 import { useActionState, useState, useEffect } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { loginAction, registerAction, verifyOtpAction } from '@/app/actions/auth';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/util/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient();
 
 export default function PortalPage() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -150,7 +148,7 @@ export default function PortalPage() {
       setClientError(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=/` }
       });
       if (error) throw error;
     } catch (e: any) {
@@ -165,7 +163,7 @@ export default function PortalPage() {
       setClientError(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=/` }
       });
       if (error) throw error;
     } catch (e: any) {
