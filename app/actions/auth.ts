@@ -158,3 +158,67 @@ export async function completeSetupAction(prevState: any, formData: FormData) {
 
   redirect(next);
 }
+
+export async function requestPasswordResetAction(prevState: any, formData: FormData) {
+  const email = formData.get('email') as string;
+
+  if (!email) {
+    return { error: 'Email is required.' };
+  }
+
+  const { createClient } = await import('@/util/supabase/server');
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  // Determine the correct origin URL for the redirect
+  let origin = 
+    process.env.NEXT_PUBLIC_SITE_URL ?? 
+    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ?? 
+    process.env.NEXT_PUBLIC_VERCEL_URL ?? 
+    process.env.VERCEL_URL ?? 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://rek-game-dev.vercel.app');
+    
+  // Ensure the origin has the correct protocol (http for localhost, https for vercel)
+  if (!origin.startsWith('http')) {
+    origin = `https://${origin}`;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/update-password`,
+  });
+
+  if (error) {
+    return { error: error.message || 'Failed to request password reset.' };
+  }
+
+  return { success: true };
+}
+
+export async function updatePasswordAction(prevState: any, formData: FormData) {
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!password || !confirmPassword) {
+    return { error: 'All fields are required.' };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: 'Passwords do not match.' };
+  }
+
+  const { createClient } = await import('@/util/supabase/server');
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase.auth.updateUser({
+    password,
+  });
+
+  if (error) {
+    return { error: error.message || 'Failed to update password.' };
+  }
+
+  redirect('/portal');
+}
