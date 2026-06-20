@@ -1,25 +1,16 @@
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { setSessionCookies } from '@/lib/leungRekAuth';
 import type { PlayerSession } from '@/lib/jwt';
 import { createClient } from '@/util/supabase/server';
 
-export async function GET(request: Request) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
+export async function GET(request: NextRequest) {
+  const code = request.nextUrl.searchParams.get('code');
   // if "next" is in param, use it as the redirect URL
-  const next = requestUrl.searchParams.get('next') ?? '/';
+  const next = request.nextUrl.searchParams.get('next') ?? '/';
 
-  let origin = 
-    process.env.NEXT_PUBLIC_SITE_URL ?? 
-    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ?? 
-    process.env.NEXT_PUBLIC_VERCEL_URL ?? 
-    process.env.VERCEL_URL ?? 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://rek-game-dev.vercel.app');
-    
-  if (!origin.startsWith('http')) {
-    origin = `https://${origin}`;
-  }
+  // Get the exact origin the user used to visit the site (handles Vercel perfectly via headers)
+  const origin = request.nextUrl.origin;
 
   if (code) {
     const cookieStore = await cookies();
