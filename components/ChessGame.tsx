@@ -363,12 +363,10 @@ export default function ChessGame({
           // Safe to apply turn and call state from server
           setTurn(data.turn);
           setCalledSquare(calledSquareData ?? null);
-          // If the remote has a call_timer set (opponent is in their call window),
-          // don't start a local timer — the opponent's client manages the countdown.
-          // Only clear callTimer if the server says null.
-          if (remoteCallTimer === null) {
-            setCallTimer(null);
-          }
+          // Set call timer from remote so the opponent also sees the countdown.
+          // This ensures they don't get stuck on "THINKING" and can manage the countdown
+          // locally as a fallback if the active player disconnects.
+          setCallTimer(remoteCallTimer);
         }
         // else: keep local turn, callTimer, and calledSquare as-is — we're in our call window
 
@@ -402,7 +400,8 @@ export default function ChessGame({
         setCallTimer(null);
         setTurn(nextTurn);
 
-        if (isOnline && roomCode) {
+        // Only the active player (or local game) should sync the timeout to avoid race conditions
+        if (isOnline && roomCode && (!playerColor || turn === playerColor)) {
           fetch('/api/supabase/games/update', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -417,7 +416,7 @@ export default function ChessGame({
     }, 1000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [callTimer, turn, isOnline, roomCode, board, moveHistory]);
+  }, [callTimer, turn, isOnline, roomCode, board, moveHistory, playerColor]);
 
   // Removed useEffect for /record to avoid race conditions
 
