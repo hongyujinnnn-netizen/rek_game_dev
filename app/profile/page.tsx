@@ -17,12 +17,13 @@ type PlayerSession = {
 
 export default function ProfilePage() {
   const [session, setSession] = useState<PlayerSession | null>(null);
+  const [liveStats, setLiveStats] = useState<{wins: number, losses: number} | null>(null);
   const [loading, setLoading] = useState(true);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/auth/session')
+    fetch('/api/auth/session', { cache: 'no-store' })
       .then(res => res.json())
       .then(payload => {
         if (!payload.session) {
@@ -30,11 +31,12 @@ export default function ProfilePage() {
           return;
         }
         setSession(payload.session);
-        fetch('/api/supabase/stats/matches')
+        fetch('/api/supabase/stats/matches', { cache: 'no-store' })
           .then(res => res.json())
-          .then(matches => {
-            if (Array.isArray(matches)) {
-              const mappedMatches = matches.map((m: any) => {
+          .then(data => {
+            const matchesArray = data.matches || [];
+            if (Array.isArray(matchesArray)) {
+              const mappedMatches = matchesArray.map((m: any) => {
                 // Determine if this user played as Red or Blue
                 const isRed = m.player_red_id === payload.session.id;
                 const opponentName = isRed ? (m.player_blue_name || 'Guest') : (m.player_red_name || 'Guest');
@@ -54,6 +56,9 @@ export default function ProfilePage() {
                 };
               });
               setRecentMatches(mappedMatches);
+            }
+            if (data.stats) {
+              setLiveStats({ wins: data.stats.wins || 0, losses: data.stats.losses || 0 });
             }
             setLoading(false);
           })
@@ -78,8 +83,8 @@ export default function ProfilePage() {
 
   if (!session) return null;
 
-  const wins = session.wins ?? 0;
-  const losses = session.losses ?? 0;
+  const wins = liveStats ? liveStats.wins : (session.wins ?? 0);
+  const losses = liveStats ? liveStats.losses : (session.losses ?? 0);
   const totalGames = wins + losses;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 

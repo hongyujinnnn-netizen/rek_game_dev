@@ -49,7 +49,7 @@ export default function Navbar() {
       </button>
 
       <div className={`${styles.links} ${mobileMenuOpen ? styles.linksOpen : ''}`}>
-        <Link href="/" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Play</Link>
+        <Link href="/" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Home</Link>
         <Link href="/profile" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Matches</Link>
         {session ? (
           <div className={styles.accountMenu}>

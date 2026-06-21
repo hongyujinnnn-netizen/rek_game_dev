@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { getAuthenticatedPlayer, getSupabaseToken } from '@/lib/apiAuth';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -34,7 +35,16 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('wins, losses')
+      .eq('id', session.id)
+      .single();
+
+    return NextResponse.json({
+      matches: data,
+      stats: profileData || { wins: session.wins, losses: session.losses }
+    });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }

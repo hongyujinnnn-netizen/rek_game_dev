@@ -355,17 +355,9 @@ export default function ChessGame({
           setOpponentWantsRematch(false);
         }
 
-        // Only the winning player's client handles stats recording to avoid duplicate rows
-        // If there's no winner yet, or we're not the winner, we don't record.
-        if (data.status === 'finished' && !wasFinished && isOnline && roomCode) {
-          if (myColor && data.winner === myColor) {
-            fetch('/api/supabase/stats/record', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ room_code: roomCode })
-            }).catch(err => console.error('Failed to record stats', err));
-          }
-        }
+        // The database now automatically handles statistics recording via PostgreSQL trigger 
+        // when the game status is updated to 'finished'. No client-side request needed.
+        // if (data.status === 'finished' && !wasFinished && isOnline && roomCode) { ... }
 
         if (!isMyCallWindow) {
           // Safe to apply turn and call state from server
