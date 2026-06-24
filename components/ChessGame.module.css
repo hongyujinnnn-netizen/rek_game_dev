@@ -835,8 +835,15 @@
     right: 12px;
   }
 
+  .boardWrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
   .board {
-    width: min(100%, calc(100vw - 24px));
+    width: 100%;
+    max-width: calc(100vw - 24px);
     border-width: 4px;
   }
 
