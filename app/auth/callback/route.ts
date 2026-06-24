@@ -9,8 +9,8 @@ export async function GET(request: NextRequest) {
   // if "next" is in param, use it as the redirect URL
   const next = request.nextUrl.searchParams.get('next') ?? '/';
 
-  // Get the exact origin the user used to visit the site, prioritizing the requested environment variable
-  const origin = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') || request.nextUrl.origin;
+  // Get the exact origin the user used to visit the site
+  const origin = request.nextUrl.origin;
 
   if (code) {
     const cookieStore = await cookies();

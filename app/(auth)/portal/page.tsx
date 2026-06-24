@@ -146,7 +146,7 @@ export default function PortalPage() {
     try {
       setIsDiscordLoading(true);
       setClientError(null);
-      const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? window.location.origin : 'https://luengrek.vercel.app');
+      const serverUrl = typeof window !== 'undefined' ? window.location.origin : 'https://luengrek.vercel.app';
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: { redirectTo: `${serverUrl}/auth/callback?next=/` }
@@ -162,7 +162,7 @@ export default function PortalPage() {
     try {
       setIsGoogleLoading(true);
       setClientError(null);
-      const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? window.location.origin : 'https://luengrek.vercel.app');
+      const serverUrl = typeof window !== 'undefined' ? window.location.origin : 'https://luengrek.vercel.app';
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${serverUrl}/auth/callback?next=/` }

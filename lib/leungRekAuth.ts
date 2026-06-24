@@ -148,7 +148,7 @@ export async function signInPlayer(email: string, password: string) {
 }
 
 export async function signUpPlayer(email: string, password: string, name: string) {
-  const payload = await supabaseRequest<SupabaseAuthResponse>('/auth/v1/signup?redirect_to=https://rek-game-dev.vercel.app/auth/callback', {
+  const payload = await supabaseRequest<SupabaseAuthResponse>('/auth/v1/signup?redirect_to=https://luengrek.vercel.app/auth/callback', {
     body: JSON.stringify({
       email,
       password,
