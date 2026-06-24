@@ -115,6 +115,7 @@ function isBasicLegalMove(board: RekBoard, from: Square, to: Square, turn: Playe
   if (
     !piece ||
     piece.player !== turn ||
+    piece.role === 'king' ||
     !movesInStraightLine ||
     staysStill ||
     target
