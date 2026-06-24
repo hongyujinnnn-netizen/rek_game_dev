@@ -175,10 +175,7 @@ export async function requestPasswordResetAction(prevState: any, formData: FormD
   let origin = 
     process.env.NEXT_PUBLIC_SERVER_URL ?? 
     process.env.NEXT_PUBLIC_SITE_URL ?? 
-    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ?? 
-    process.env.NEXT_PUBLIC_VERCEL_URL ?? 
-    process.env.VERCEL_URL ?? 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://rek-game-dev.vercel.app');
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://luengrek.vercel.app');
     
   // Ensure the origin has the correct protocol (http for localhost, https for vercel)
   if (!origin.startsWith('http')) {

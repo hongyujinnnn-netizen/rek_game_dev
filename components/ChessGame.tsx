@@ -287,6 +287,9 @@ export default function ChessGame({
   const [waitingForOpponent, setWaitingForOpponent] = useState<boolean>(false);
   const [opponentName, setOpponentName] = useState<string | null>(null);
   const [realtimeActive, setRealtimeActive] = useState(false);
+  const [redWins, setRedWins] = useState<number>(0);
+  const [blueWins, setBlueWins] = useState<number>(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const channelRef = useRef<any>(null);
   const gameStateRef = useRef<GameState>(gameState);
   
@@ -619,6 +622,22 @@ export default function ChessGame({
     }
   }, [callTimer, turn, isOnline, roomCode]);
 
+  // Spacebar shortcut to pass the call window
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        const isMyTurn = !isOnline || turn === playerColor;
+        if (callTimer !== null && isMyTurn) {
+          e.preventDefault(); // Prevent default page scroll
+          endCallWindow();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [callTimer, isOnline, turn, playerColor, endCallWindow]);
+
   const resetGame = useCallback(async (): Promise<void> => {
     setBoard(createInitialBoard());
     setTurn('red');
@@ -876,6 +895,8 @@ export default function ChessGame({
     setCalledSquare(null);
 
     if (capturedRoles.includes('king')) {
+      if (piece.player === 'red') setRedWins(prev => prev + 1);
+      if (piece.player === 'blue') setBlueWins(prev => prev + 1);
       setCallTimer(null);
       setWinner(piece.player);
       setGameState('finished');
@@ -979,43 +1000,57 @@ export default function ChessGame({
         </div>
       )}
 
-      {/* ================= TOP LEFT: PLAYER ONE (YOU) ================= */}
-      <div className={`${styles.playerCard} ${styles.topLeftPlayer} ${isMyTurn ? styles.activeTurn : ''}`}>
-        <div className={styles.profileHeader}>
-          <span className={`${styles.badge} ${playerColor === 'blue' ? styles.blueBadge : styles.redBadge}`}></span>
-          <span className={styles.username}>{playerName || (isOnline ? 'You' : getPlayerLabel(turn))}</span>
-        </div>
-        {isOnline && playerColor && (
-          <span className={styles.playerMeta}>{getPlayerLabel(playerColor)} • {isOnline ? 'Online' : 'Local'}</span>
-        )}
+      {/* ================= BACKGROUND MONOLITH ================= */}
+      <svg className={styles.monolithKing} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19,20H5V22H19V20M17,14C17,15.66 15.66,17 14,17H10C8.34,17 7,15.66 7,14C7,12.78 7.74,11.73 8.82,11.23L7.1,7.24L9.46,8.23L11.08,4.45C10.74,4.24 10.5,3.88 10.5,3.46C10.5,2.65 11.17,1.96 12,1.96C12.83,1.96 13.5,2.65 13.5,3.46C13.5,3.88 13.26,4.24 12.92,4.45L14.54,8.23L16.9,7.24L15.18,11.23C16.26,11.73 17,12.78 17,14Z" />
+      </svg>
 
-        {/* Chess Clock */}
-        <div className={`${styles.chessClock} ${callTimer !== null && isMyTurn ? styles.clockAlert : ''}`}>
-          {callTimer !== null && isMyTurn
-            ? `00:${callTimer.toString().padStart(2, '0')}`
-            : isMyTurn ? 'YOUR TURN' : '--:--'}
+      {/* ================= CENTRAL VS BAR ================= */}
+      <div className={styles.vsContainer}>
+        {/* RED PLAYER (LEFT WING) */}
+        <div className={`${styles.playerWing} ${styles.redWing} ${turn === 'red' ? styles.activeWing : styles.inactiveWing}`}>
+          <div className={styles.playerInfo}>
+            <span className={`${styles.dot} ${styles.bgRed}`}></span>
+            <span className={styles.playerName}>
+              {isOnline ? (playerColor === 'red' ? (playerName || 'You') : opponentLabel) : 'Red Player'}
+            </span>
+          </div>
+          <div className={`${styles.timer} ${callTimer !== null && turn === 'red' ? styles.timerAlert : ''}`}>
+            {callTimer !== null && turn === 'red'
+              ? `00:${callTimer.toString().padStart(2, '0')}`
+              : turn === 'red' ? 'YOUR TURN' : '--:--'}
+          </div>
         </div>
 
-        {/* Inline call action */}
-        {callTimer !== null && isMyTurn && (
-          <button onClick={endCallWindow} className={styles.inlineCallBtn}>
-            Pass Call Window
-          </button>
-        )}
+        {/* SCOREBOARD BADGE */}
+        <div className={styles.scoreboardBadge}>
+          <span className={`${styles.scoreNumber} ${styles.scoreRed}`}>{redWins}</span>
+          <span className={styles.scoreDivider}>VS</span>
+          <span className={`${styles.scoreNumber} ${styles.scoreBlue}`}>{blueWins}</span>
+        </div>
+
+        {/* BLUE PLAYER (RIGHT WING) */}
+        <div className={`${styles.playerWing} ${styles.blueWing} ${turn === 'blue' ? styles.activeWing : styles.inactiveWing}`}>
+          <div className={`${styles.timer} ${callTimer !== null && turn === 'blue' ? styles.timerAlert : ''}`}>
+            {callTimer !== null && turn === 'blue'
+              ? `00:${callTimer.toString().padStart(2, '0')}`
+              : turn === 'blue' ? 'YOUR TURN' : '--:--'}
+          </div>
+          <div className={styles.playerInfo}>
+            <span className={styles.playerName}>
+              {isOnline ? (playerColor === 'blue' ? (playerName || 'You') : opponentLabel) : 'Blue Player'}
+            </span>
+            <span className={`${styles.dot} ${styles.bgBlue}`}></span>
+          </div>
+        </div>
       </div>
 
-      {/* ================= TOP RIGHT: PLAYER TWO (OPPONENT) ================= */}
-      <div className={`${styles.playerCard} ${styles.topRightPlayer} ${!isMyTurn ? styles.activeTurn : ''}`}>
-        <div className={styles.profileHeader}>
-          <span className={`${styles.badge} ${playerColor === 'blue' ? styles.redBadge : styles.blueBadge}`}></span>
-          <span className={styles.username}>{opponentLabel}</span>
-        </div>
-        <div className={`${styles.chessClock} ${callTimer !== null && !isMyTurn ? styles.clockAlert : ''}`}>
-          {callTimer !== null && !isMyTurn
-            ? `00:${callTimer.toString().padStart(2, '0')}`
-            : !isMyTurn ? 'THINKING' : '--:--'}
-        </div>
-      </div>
+      {/* CENTERED INLINE CALL BUTTON */}
+      {callTimer !== null && isMyTurn && (
+        <button onClick={endCallWindow} className={styles.passCallBtn}>
+          Pass Call Window
+        </button>
+      )}
 
       {/* ================= CENTER: MAIN GAME BOARD ================= */}
       <main className={styles.centerStage}>
@@ -1177,7 +1212,14 @@ export default function ChessGame({
       </div>
 
       {/* ================= RIGHT SIDEBAR ================= */}
-      <aside className={styles.rightSidebar}>
+      <aside className={`${styles.rightSidebar} ${!isSidebarOpen ? styles.sidebarClosed : ''}`}>
+        <button 
+          className={styles.sidebarToggleBtn} 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
+        >
+          {isSidebarOpen ? '▶' : '◀'}
+        </button>
         <div className={styles.sidebarSection}>
           <span className={styles.sidebarLabel}>ROOM</span>
           <div className={styles.roomTag}>{roomCode || 'LOCAL'}</div>
