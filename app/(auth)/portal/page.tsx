@@ -201,12 +201,12 @@ export default function PortalPage() {
       <div className="absolute top-2/3 left-1/3 w-1 h-1 bg-[#FFB300]/30 rounded-full animate-ping shadow-[0_0_8px_#FFB300]" style={{ animationDuration: '5s', animationDelay: '2s' }} />
 
       {/* Card */}
-      <div className="w-full max-w-[520px] relative z-10">
+      <div className="w-full max-w-[400px] relative z-10">
 
         {/* Gradient border */}
         <div className="absolute -inset-[1px] bg-gradient-to-b from-[#FFB300]/25 via-[#FFB300]/5 to-transparent rounded-[22px] pointer-events-none" />
 
-        <div className="bg-[#0C0C12]/90 backdrop-blur-2xl border border-[#FFB300]/20 rounded-[22px] p-8 sm:p-10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9),0_0_60px_-15px_rgba(255,179,0,0.07)]">
+        <div className="bg-[#0C0C12]/90 backdrop-blur-2xl border border-[#FFB300]/20 rounded-[22px] px-6 py-8 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9),0_0_60px_-15px_rgba(255,179,0,0.07)]">
 
           {/* Header */}
           <div className="flex flex-col items-center mb-8">
@@ -461,7 +461,7 @@ export default function PortalPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="group relative mt-4 w-full h-[54px] flex justify-center items-center rounded-[13px] font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-gradient-to-r from-[#FFB300] to-[#FF6B00] overflow-hidden shadow-[0_6px_22px_rgba(255,107,0,0.28)] hover:shadow-[0_10px_30px_rgba(255,107,0,0.42)] active:scale-[0.985] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="group relative mt-4 w-full h-[54px] flex justify-center items-center rounded-[14px] font-extrabold text-[15px] text-[#130800] tracking-widest uppercase bg-gradient-to-r from-[#FFB300] via-[#FF9D00] to-[#FF6B00] overflow-hidden shadow-[0_8px_24px_rgba(255,107,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-[#FFB300]/50 hover:shadow-[0_12px_32px_rgba(255,107,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-[-101%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10 flex items-center gap-2">
@@ -484,7 +484,7 @@ export default function PortalPage() {
           {/* Divider */}
           <div className="relative mt-10 mb-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/[0.07]" />
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-white/[0.12] to-transparent" />
             </div>
             <div className="relative flex justify-center">
               <span className="bg-[#0C0C12] px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-[#4B5563]">
@@ -499,7 +499,7 @@ export default function PortalPage() {
               type="button"
               onClick={handleDiscordLogin}
               disabled={isDiscordLoading || isGoogleLoading}
-              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-[#5865F2] hover:bg-[#4752C4] rounded-[13px] text-white font-bold text-[14px] tracking-wide transition-all duration-200 hover:shadow-[0_0_24px_rgba(88,101,242,0.35)] hover:-translate-y-0.5 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 hover:border-[#5865F2]/60 rounded-[14px] text-white font-bold text-[14px] tracking-wide transition-all duration-300 hover:shadow-[0_0_20px_rgba(88,101,242,0.25),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isDiscordLoading ? (
                 <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -519,7 +519,7 @@ export default function PortalPage() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isDiscordLoading || isGoogleLoading}
-              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-white hover:bg-gray-100 border border-[#3F3F46] rounded-[13px] text-gray-900 font-bold text-[14px] tracking-wide transition-all duration-200 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:-translate-y-0.5 active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 rounded-[14px] text-white font-bold text-[14px] tracking-wide transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.08),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isGoogleLoading ? (
                 <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -584,7 +584,7 @@ function FloatingInput({ icon, suffix, label, error, ...inputProps }: FloatingIn
         <input
           {...inputProps}
           placeholder=" "
-          className={`peer w-full h-[54px] bg-white/[0.025] border rounded-[12px] pl-[42px] pr-[42px] pt-[22px] pb-[6px] text-[14.5px] text-white font-medium focus:outline-none transition-all duration-200 autofill:bg-transparent ${error ? 'border-red-500/50 focus:border-red-500/80 focus:border-l-[3px] focus:border-l-red-500 focus:bg-red-500/[0.025]' : 'border-white/[0.08] focus:border-[#FFB300]/55 focus:border-l-[3px] focus:border-l-[#FFB300] focus:bg-[#FFB300]/[0.025]'}`}
+          className={`peer w-full h-[54px] bg-white/[0.025] border rounded-[12px] !pl-11 !pr-11 pt-[22px] pb-[6px] text-[14.5px] text-white font-medium focus:outline-none transition-all duration-200 autofill:bg-transparent ${error ? 'border-red-500/50 focus:border-red-500/80 focus:border-l-[3px] focus:border-l-red-500 focus:bg-red-500/[0.025]' : 'border-white/[0.08] focus:border-[#FFB300]/55 focus:border-l-[3px] focus:border-l-[#FFB300] focus:bg-[#FFB300]/[0.025]'}`}
         />
         <label
           htmlFor={inputProps.id}
