@@ -187,7 +187,7 @@ export default function PortalPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen flex items-center justify-center bg-[#05050A] relative overflow-hidden px-4 py-12 selection:bg-[#FFB300]/30 selection:text-[#FFB300]">
+      <div className="min-h-screen flex items-center justify-center bg-[#05050A] relative overflow-hidden px-4 py-8 sm:py-12 selection:bg-[#FFB300]/30 selection:text-[#FFB300]">
 
       {/* Radial glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[#FFB300]/[0.04] rounded-full filter blur-[160px] pointer-events-none" />
@@ -206,29 +206,29 @@ export default function PortalPage() {
         {/* Gradient border */}
         <div className="absolute -inset-[1px] bg-gradient-to-b from-[#FFB300]/25 via-[#FFB300]/5 to-transparent rounded-[22px] pointer-events-none" />
 
-        <div className="bg-[#0C0C12]/90 backdrop-blur-2xl border border-[#FFB300]/20 rounded-[22px] px-6 py-8 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9),0_0_60px_-15px_rgba(255,179,0,0.07)]">
+        <div className="bg-[#0C0C12]/90 backdrop-blur-2xl border border-[#FFB300]/20 rounded-[22px] px-8 py-7 sm:px-10 sm:py-8 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9),0_0_60px_-15px_rgba(255,179,0,0.07)]">
 
           {/* Header */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative mb-5 group cursor-default">
+          <div className="flex flex-col items-center mb-6 sm:mb-8">
+            <div className="relative mb-4 sm:mb-5 group cursor-default">
               <div className="absolute inset-0 bg-[#FFB300] rounded-full blur-[24px] opacity-20 group-hover:opacity-35 transition-opacity duration-500 animate-pulse" />
-              <div className="w-[72px] h-[72px] bg-gradient-to-b from-[#1C1C28] to-[#0A0A10] rounded-full border border-[#FFB300]/25 flex items-center justify-center relative z-10 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+              <div className="w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] bg-gradient-to-b from-[#1C1C28] to-[#0A0A10] rounded-full border border-[#FFB300]/25 flex items-center justify-center relative z-10 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
                   className="text-[#FFB300] drop-shadow-[0_0_12px_rgba(255,179,0,0.7)]">
                   <path d="M2 20H22V22H2V20ZM2 18L4.5 5L9 11L12 2L15 11L19.5 5L22 18H2Z" fill="currentColor" />
                 </svg>
               </div>
             </div>
-            <h1 className="text-[30px] font-bold text-white tracking-tight mb-1 leading-none">
+            <h1 className="text-[26px] sm:text-[30px] font-bold text-white tracking-tight mb-1 leading-none text-center">
               Challenger Portal
             </h1>
-            <p className="text-[14px] font-medium text-[#6B7280] tracking-wide uppercase">
+            <p className="text-[12px] sm:text-[14px] font-medium text-[#6B7280] tracking-wide uppercase text-center">
               Competitive Chess Platform
             </p>
           </div>
 
           {/* Tabs — segmented control */}
-          <div className="relative flex p-1.5 bg-black/40 rounded-full mb-8 border border-white/[0.06] h-[50px]">
+          <div className="relative flex p-1.5 bg-black/40 rounded-full mb-6 sm:mb-8 border border-white/[0.06] h-[46px] sm:h-[50px]">
             {/* Sliding pill — uses left/width instead of translateX to avoid gap math */}
             <div
               className="absolute top-1.5 bottom-1.5 rounded-full bg-[#1C1C26] border border-[#FFB300]/35 shadow-[0_0_18px_rgba(255,179,0,0.18)] transition-all duration-300 ease-out z-0"
@@ -242,7 +242,7 @@ export default function PortalPage() {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 relative z-10 h-full text-[13px] font-bold rounded-full tracking-widest uppercase transition-colors duration-300 ${
+                className={`flex-1 relative z-10 h-full text-[12px] sm:text-[13px] font-bold rounded-full tracking-widest uppercase transition-colors duration-300 ${
                   activeTab === tab ? 'text-[#FFB300]' : 'text-[#6B7280] hover:text-[#9CA3AF]'
                 }`}
               >
@@ -482,32 +482,32 @@ export default function PortalPage() {
           )}
 
           {/* Divider */}
-          <div className="relative mt-10 mb-8">
+          <div className="relative mt-8 mb-6 sm:mt-10 sm:mb-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full h-px bg-gradient-to-r from-transparent via-white/[0.12] to-transparent" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-[#0C0C12] px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-[#4B5563]">
+              <span className="bg-[#0C0C12] px-3 sm:px-4 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#4B5563]">
                 or continue with
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {/* Discord */}
             <button
               type="button"
               onClick={handleDiscordLogin}
               disabled={isDiscordLoading || isGoogleLoading}
-              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 hover:border-[#5865F2]/60 rounded-[14px] text-white font-bold text-[14px] tracking-wide transition-all duration-300 hover:shadow-[0_0_20px_rgba(88,101,242,0.25),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 w-full h-[46px] sm:h-[50px] flex items-center justify-center gap-2 sm:gap-3 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 hover:border-[#5865F2]/60 rounded-[14px] text-white font-bold text-[13px] sm:text-[14px] tracking-wide transition-all duration-300 hover:shadow-[0_0_20px_rgba(88,101,242,0.25),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isDiscordLoading ? (
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
                 </svg>
               )}
@@ -519,15 +519,15 @@ export default function PortalPage() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isDiscordLoading || isGoogleLoading}
-              className="flex-1 w-full h-[50px] flex items-center justify-center gap-3 bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 rounded-[14px] text-white font-bold text-[14px] tracking-wide transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.08),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 w-full h-[46px] sm:h-[50px] flex items-center justify-center gap-2 sm:gap-3 bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 rounded-[14px] text-white font-bold text-[13px] sm:text-[14px] tracking-wide transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.08),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isGoogleLoading ? (
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" viewBox="0 0 48 48">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 48 48">
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
                   <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
